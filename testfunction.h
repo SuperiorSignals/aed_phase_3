@@ -55,6 +55,6 @@ void test_function_36(); // Test digital outputs
 void test_function_37(); // Test mesh functions
 void test_function_38(); // Test new mesh functions
 void test_function_39();
-void test_function_40();
+void test_function_40(); // Test address and port settings
 #endif // !TESTFUNCTION_H_
 
