@@ -36,6 +36,7 @@ typedef unsigned char BOOL;
 	/* Exported constants --------------------------------------------------------*/
 	/* Exported macro ------------------------------------------------------------*/
 	/* Exported functions --------------------------------------------------------*/
+	char GenerateAPIPacket(char api_frame, char at_command[2], char frame_length[2], char *rawData);
 	//void generateApiArray(char delimiter, int length, char *data, char checksum);	
 	void generateApiArray(char delimiter, int length, char *data);
 	//void generateApiFrame(char delimiter, int length, char *data, char checksum);
