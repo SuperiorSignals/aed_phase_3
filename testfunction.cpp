@@ -1595,32 +1595,3 @@ void test_function_40()	//Set  UDP
 
 	system("pause");
 }
-
-char GenerateAPIPacket(char api_frame, char at_command[2], char frame_length[2], char *rawData)
-{ 
-	char CheckSum;
-	const int DATA = 512;
-	int i ;
-	int j;
-	int k;
-	char Packet[DATA];
-	const char START = '~';
-	Packet[0] = START;
-	Packet[1] = data_length[0];
-	Packet[2] = data_length[1];
-	Packet[3] = api_frame;
-	Packet[4] = at_command[0];
-	Packet[5] = at_command[1];
-	for(i = 6, j = 0; j < (frame_length - 3); i++, j++)  //3 being the Data Length - ApiFrame and AT COMMAND/ Denoted here raw data
-	{ 
-		Packet[i] = rawData[j]; 
-	}
-	
-	CheckSum = generateApiChecksum(Packet, data_length)
-	packet[i] = CheckSum;
-        return Packet;
-}
-	
-	
-		
-	
