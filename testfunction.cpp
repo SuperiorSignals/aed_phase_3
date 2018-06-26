@@ -1560,7 +1560,7 @@ void test_function_39()
 
 }
 
-void test_function_40()	//Set  UDP
+void test_function_40()
 {
 	//XBee xbee;
 	const char AT_SET = '0x08';
