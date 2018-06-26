@@ -56,7 +56,7 @@ void test_function_37(); // Test mesh functions
 void test_function_38(); // Test new mesh functions
 void test_function_39(); // Test generation of API AT packets
 void test_function_40(); // Test address and port settings
-void test_function_41();
+void test_function_41(); // Run arbitrary AT command by API
 void test_function_42();
 void test_function_43();
 void test_function_44();
