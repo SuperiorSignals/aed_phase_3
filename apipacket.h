@@ -14,6 +14,8 @@
 #define PACKET_LENGTH_HIGH 2
 #define PACKET_LENGTH_LOW 3
 
+char generateApiChecksum(std::vector<char> input);
+
 class ApiPacket {
 private:
 	std::vector<unsigned char> rawPacket;
@@ -42,6 +44,48 @@ public:
 	bool isLengthValid();
 	void replaceInvalidChecksum();
 	void replaceInvalidLength();
+};
+
+
+// Author: Dane Rodriguez
+const int DATA = 512;
+
+class TxrqPacket
+{
+
+public:
+	const char START = 0x7E;
+	const char FRAME_TYPE = 0x20;
+	const char TRANSMIT_OPT = 0;
+	const char TX_PROTOCOL = 0;
+
+	TxrqPacket();
+	//Assign Nonconstant Variables with outside Data
+	void setDestinationAddress(std::vector<char> a);
+	void setDestinationPort(std::vector<char> d);
+	void setFrameId(const char x);
+	void setPayLoad(std::vector<char> p);
+	void setSourcePort(std::vector<char> s);
+	void setTxPacket(std::vector<char> input);
+
+	//pass a std::vector and set as equal to existing member variable
+	char getFrameId();
+	std::vector<char> getDestinationAddress();
+	std::vector<char> getDestinationPort();
+	std::vector<char> getPayload();
+	std::vector<char> getSourcePort();
+	std::vector<char> getTxPacket();
+
+	//Takes all prepared data and assembles Packet
+	void buildPacket();
+
+private:
+	char frameId;
+	std::vector<char> destinationAddress;
+	std::vector<char> destinationPort;
+	std::vector<char> sourcePort;
+	std::vector<char> payLoad;
+	std::vector<char> txPacket;    //Raw, no checksum
 };
 
 #endif // !APIPACKET_H_

@@ -240,85 +240,93 @@ void ApiPacket::replaceInvalidLength()
 }
 
 
-//*************************************************************DANE
+// Author: Dane Rodriguez
+//Assign Nonconstant Variables with outside Data
+void TxrqPacket::setDestinationAddress(std::vector<char> a) { destinationAddress = a; }
+void TxrqPacket::setDestinationPort(std::vector<char> d) { destinationPort = d; }
+void TxrqPacket::setFrameId(const char x) { frameId = x; }
+void TxrqPacket::setPayLoad(std::vector<char> p) { payLoad = p; }
+void TxrqPacket::setSourcePort(std::vector<char> s) { sourcePort = s; }
+void TxrqPacket::setTxPacket(std::vector<char> input) { txPacket = input; }
 
-const int DATA = 512;
+//pass a std::vector and set as equal to existing member variable
+char TxrqPacket::getFrameId() { return frameId; }
+std::vector<char> TxrqPacket::getDestinationAddress() { return destinationAddress; }
+std::vector<char> TxrqPacket::getDestinationPort() { return destinationPort; }
+std::vector<char> TxrqPacket::getPayload() { return payLoad; }
+std::vector<char> TxrqPacket::getSourcePort() { return sourcePort; }
+std::vector<char> TxrqPacket::getTxPacket() { return txPacket; }
 
-class TXRQ_Packet
+int accessory_main()
 {
+    std::vector<char> Address;
+    std::vector<char> Destination;
+    std::vector<char> Source;
+    std::vector<char> Payload;    
+    TxrqPacket MyPacket;    
 
-    public:
-     const char START = '~';
-     const char FRAME_TYPE = ' ';
-     const char TRANSMIT_OPT = '0';
-     const char TX_PROTOCOL = '0';
-  
-                               //Assign Nonconstant Variables with outside Data
-      void assignFrameID(const char x) { Frame_ID = x; }
-      void assignAddress(vector<char> a) { Destination_Address = a; }
-      void assignDPort(vector<char> d) { Destination_Port = d; }
-      void assignSrcPort(vector<char> s) { SourcePort = s; }
-      void assignPayload(vector<char> p) { PayLoad = p; }
-      
-                               //pass a vector and set as equal to existing member variable
-      char getFrameID() { return Frame_ID; }
-      void getDestination_Address(vector<char> a) { a = Destination_Address; }
-      void getDestination_Port(vector<char> a) { a = Destination_Port; }
-      void getSourcePort(vector<char> a) {a = SourcePort; }
-      void getPayload(vector<char> a) { a = PayLoad; }
-      
-                                //lumps protocol and transmit in with sourceport 
-      void Concat() { SourcePort.push_back(TX_PROTOCOL); SourcePort.push_back(TRANSMIT_OPT); }
-    
-                              //Takes all prepared data and assembles Packet
-      void BuildPacket();
-                              
-    private:
-      char Frame_ID;
-      vector<char> Destination_Address;
-      vector<char> Destination_Port;
-      vector<char> SourcePort;
-      vector<char> PayLoad;
-      
-      vector<char> TXPacket;    //Raw, no checksum
-};
-
-
-
-int main()
-{
-    cout<<"Starting TX Request"<<endl;
-    vector<char> Address;
-    vector<char> Destination;
-    vector<char> Source;
-    vector<char> Payload;
-    
-    TXRQ_Packet MyPacket;
-    
-
-    MyPacket.assignFrameID(1);
-    MyPacket.assignAddress(Address);
-    MyPacket.assignDPort(Destination);
-    MyPacket.assignSrcPort(Source);
-    MyPacket.assignPayload(Payload);
-    
-    MyPacket.BuildPacket();
-    
+	std::cout << "Starting TX Request" << std::endl;
+    MyPacket.setFrameId(1);
+    MyPacket.setDestinationAddress(Address);
+    MyPacket.setDestinationPort(Destination);
+    MyPacket.setSourcePort(Source);
+    MyPacket.setPayLoad(Payload);    
+    MyPacket.buildPacket();    
     
     return 0; 
 }
-    
-void TXRQ_Packet::BuildPacket()
+
+TxrqPacket::TxrqPacket()
 {
-    TXPacket.push_back(START);
-    TXPacket.push_back(FRAME_TYPE);
-    TXPacket.push_back(Frame_ID);
-    TXPacket.insert(TXPacket.end(), Destination_Address.begin(), Destination_Address.end());
-    TXPacket.insert(TXPacket.end(), Destination_Port.begin(), Destination_Port.end());
-    Concat();                   //concats TX_PROTOCOL and TRANSMIT_OPT tp SourcePort
-    TXPacket.insert(TXPacket.end(), SourcePort.begin(), SourcePort.end());
-    TXPacket.insert(TXPacket.end(), PayLoad.begin(), PayLoad.end());
+	frameId = 1;
+}
+    
+void TxrqPacket::buildPacket()
+{
+	char c;
+	int length;
+	int temporary;
+	char upperNibble;
+	char lowerNibble;
 	
-   return;
+	length = 1 + 1 + 4 + 2 + 2 + 1 + 1 + payLoad.size();
+	temporary = 0b11110000;
+	temporary = temporary & length;
+	temporary >> 4;
+	upperNibble = temporary;
+	temporary = 0b00001111;
+	temporary = temporary & length;
+	lowerNibble = temporary;
+
+    txPacket.push_back(START);
+	txPacket.push_back(upperNibble);
+	txPacket.push_back(lowerNibble);
+    txPacket.push_back(FRAME_TYPE);
+    txPacket.push_back(frameId);
+    txPacket.insert(txPacket.end(), destinationAddress.begin(), destinationAddress.end());
+    txPacket.insert(txPacket.end(), destinationPort.begin(), destinationPort.end());
+	txPacket.push_back(TX_PROTOCOL);
+	txPacket.push_back(TRANSMIT_OPT);
+    txPacket.insert(txPacket.end(), sourcePort.begin(), sourcePort.end());
+    txPacket.insert(txPacket.end(), payLoad.begin(), payLoad.end());
+	c = generateApiChecksum(txPacket);
+	txPacket.push_back(c);
 }   
     
+char generateApiChecksum(std::vector<char> input)
+{
+	int length;
+	char output;
+	int i, j;
+
+	length = input.size();
+	j = 0;
+	for (i = 0; i < length; i++) {
+		j += input[i + 3];
+	}
+	j = j & 0x00FF;
+	output = j;
+	output = 0xFF - output;
+
+	return output;
+}
