@@ -339,10 +339,97 @@ void test_menu(int selection)
 	case 40:
 		test_function_40();
 		break;
-	default:
-		break;
 	case 41:
-		test_function_41();   //add testfnct 41 proto
+		test_function_41();
+		break;
+	case 42:
+		test_function_42();
+		break;
+	case 43:
+		test_function_43();
+		break;
+	case 44:
+		test_function_44();
+		break;
+	case 45:
+		test_function_45();
+		break;
+	case 46:
+		test_function_46();
+		break;
+	case 47:
+		test_function_47();
+		break;
+	case 48:
+		test_function_48();
+		break;
+	case 49:
+		test_function_49();
+		break;
+	case 50:
+		test_function_50();
+		break;
+	case 51:
+		test_function_51();
+		break;
+	case 52:
+		test_function_52();
+		break;
+	case 53:
+		test_function_53();
+		break;
+	case 54:
+		test_function_54();
+		break;
+	case 55:
+		test_function_55();
+		break;
+	case 56:
+		test_function_56();
+		break;
+	case 57:
+		test_function_57();
+		break;
+	case 58:
+		test_function_58();
+		break;
+	case 59:
+		test_function_59();
+		break;
+	case 60:
+		test_function_60();
+		break;
+	case 61:
+		test_function_61();
+		break;
+	case 62:
+		test_function_62();
+		break;
+	case 63:
+		test_function_63();
+		break;
+	case 64:
+		test_function_64();
+		break;
+	case 65:
+		test_function_65();
+		break;
+	case 66:
+		test_function_66();
+		break;
+	case 67:
+		test_function_67();
+		break;
+	case 68:
+		test_function_68();
+		break;
+	case 69:
+		test_function_69();
+		break;
+	case 70:
+		test_function_70();
+		break;
+	default:
 		break;
 	}
 }
@@ -412,7 +499,7 @@ void test_function_2()
 	xBeeCell.apiModeExit();
 	//std::cout << "Api Mode Exit Complete" << std::endl;
 
-	system("pause");
+	//system("pause");
 }
 
 void test_function_3()
@@ -1557,19 +1644,44 @@ void test_function_38()
 
 void test_function_39()
 {
+	SerialPort serialPort("/dev/ttymxc1", 115200);
+	XBeeCell xBeeCell;
+	char at_command[2] = { 'D','E' };
+	char raw_data[256];
+	char frame_length[2];
+	char packet[512];
+	char api_frame[API_AT_TOTAL_LENGTH];
+	std::vector<char> inputBuffer;
+	std::vector<unsigned char> bufferDuplicate;
 
+
+	frame_length[0] = 0;
+	frame_length[1] = 1 + 1 + 2 + 2;
+	raw_data[0] = 0x14;
+	raw_data[1] = 0x3C;
+	xBeeCell.apiModeOperation();
+	generateApiAtPacket(packet, 1, at_command, frame_length, raw_data);
+	serialPort.open();
+	serialPort.write(convertArrayToVector(packet, static_cast<int>(3 + frame_length[1] + 1)));
+	serialPort.timedRead(inputBuffer, 5.0);
+	bufferDuplicate = convertVectorToUnsigned(inputBuffer);
+	displayHexadecimal(bufferDuplicate);
+	xBeeCell.apiModeExit();
 }
 
+// Author: Dane Rodriguez
 void test_function_40()
 {
 	//XBee xbee;
-	const char AT_SET = '0x08';
+	const char AT_SET = 0x08;
 	SerialPort serialPort("/dev/ttymxc1", 115200);
 	XBeeCell xBeeCell;
 	char at_command[2] = { 'D','E' };
 	char api_frame[API_AT_TOTAL_LENGTH];
 	std::vector<char> inputBuffer;
 	std::vector<unsigned char> bufferDuplicate;
+	char rawData[512];
+	int frameLength = 0;
 
 	//xbee.setOperationMode(API_MODE);
 	//generateApiAtCommand(at_command, 0, 0, api_frame);
@@ -1583,11 +1695,12 @@ void test_function_40()
 	bufferDuplicate = convertVectorToUnsigned(inputBuffer);
 	displayHexadecimal(bufferDuplicate);
 	
-	at_command[2] = { 'D', 'L' };
-	char api_frame = 'AT_SET';
+	//at_command[2] = { 'D', 'L' };
+	at_command[0] = 'D';
+	at_command[1] = 'L';
+	char api_frame = AT_SET;
 	//char frame_length = "0X";
-	char rawData[] =  
-	serialPort.write(
+	//serialPort.write(rawData, frameLength);
 	 
 	
 	xBeeCell.apiModeExit();
@@ -1595,3 +1708,34 @@ void test_function_40()
 
 	system("pause");
 }
+
+void test_function_41() { }
+void test_function_42() { }
+void test_function_43() { }
+void test_function_44() { }
+void test_function_45() { }
+void test_function_46() { }
+void test_function_47() { }
+void test_function_48() { }
+void test_function_49() { }
+void test_function_50() { }
+void test_function_51() { }
+void test_function_52() { }
+void test_function_53() { }
+void test_function_54() { }
+void test_function_55() { }
+void test_function_56() { }
+void test_function_57() { }
+void test_function_58() { }
+void test_function_59() { }
+void test_function_60() { }
+void test_function_61() { }
+void test_function_62() { }
+void test_function_63() { }
+void test_function_64() { }
+void test_function_65() { }
+void test_function_66() { }
+void test_function_67() { }
+void test_function_68() { }
+void test_function_69() { }
+void test_function_70() { }

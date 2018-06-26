@@ -23,6 +23,7 @@
 
 #define CELL_INSTRUCTION_STRING_SIZE 48
 #define SMALL_STRING_SIZE 16
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 char standardApiArray[STANDARD_API_SIZE];
@@ -31,29 +32,35 @@ char serverPort[CELL_INSTRUCTION_STRING_SIZE] = "5180";
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-char generateAPIPacket(char api_frame, char at_command[2], char frame_length[2], char *rawData)
+
+// Author: Dane Rodriguez
+void generateApiAtPacket(char packet[MAX_DATA], char api_frame, char at_command[2], char frame_length[2], char *raw_data)
 { 
-	char CheckSum;
-	const int DATA = 512;
+
+	const char AT_FRAME_TYPE = 0x08;
+	const char AT_START = 0x7E;
+	char check_sum;
 	int i ;
 	int j;
 	int k;
-	char Packet[DATA];
-	const char START = '~';
-	Packet[0] = START;
-	Packet[1] = data_length[0];
-	Packet[2] = data_length[1];
-	Packet[3] = api_frame;
-	Packet[4] = at_command[0];
-	Packet[5] = at_command[1];
-	for(i = 6, j = 0; j < (frame_length - 3); i++, j++)  //3 being the Data Length - ApiFrame and AT COMMAND/ Denoted here raw data
+	int data_length;
+
+	data_length = frame_length[0];
+	data_length << 4;
+	data_length += frame_length[1];
+	packet[0] = AT_START;
+	packet[1] = frame_length[0];
+	packet[2] = frame_length[1];
+	packet[3] = AT_FRAME_TYPE;
+	packet[4] = api_frame;
+	packet[5] = at_command[0];
+	packet[6] = at_command[1];
+	for(i = 7, j = 0; j < (data_length - 4); i++, j++)
 	{ 
-		Packet[i] = rawData[j]; 
-	}
-	
-	CheckSum = generateApiChecksum(Packet, data_length)
-	packet[i] = CheckSum;
-        return Packet;
+		packet[i] = raw_data[j]; 
+	}	
+	check_sum = generateApiChecksum(packet, data_length);
+	packet[i] = check_sum;
 }
 
 /*******************************************************************************

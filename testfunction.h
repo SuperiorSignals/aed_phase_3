@@ -54,7 +54,37 @@ void test_function_35(); // Test different ADC channels
 void test_function_36(); // Test digital outputs
 void test_function_37(); // Test mesh functions
 void test_function_38(); // Test new mesh functions
-void test_function_39();
+void test_function_39(); // Test generation of API AT packets
 void test_function_40(); // Test address and port settings
+void test_function_41();
+void test_function_42();
+void test_function_43();
+void test_function_44();
+void test_function_45();
+void test_function_46();
+void test_function_47();
+void test_function_48();
+void test_function_49();
+void test_function_50();
+void test_function_51();
+void test_function_52();
+void test_function_53();
+void test_function_54();
+void test_function_55();
+void test_function_56();
+void test_function_57();
+void test_function_58();
+void test_function_59();
+void test_function_60();
+void test_function_61();
+void test_function_62();
+void test_function_63();
+void test_function_64();
+void test_function_65();
+void test_function_66();
+void test_function_67();
+void test_function_68();
+void test_function_69();
+void test_function_70();
 #endif // !TESTFUNCTION_H_
 

@@ -29,6 +29,7 @@
 	#define API_IP_COMMAND_TYPE 0x20
 	#define API_AT_TOTAL_LENGTH 10
 	#define API_AT_NO_PARAM_TOTAL_LENGTH 8
+	#define MAX_DATA 512
 
 	
 	/* Exported types ------------------------------------------------------------*/
@@ -36,7 +37,7 @@ typedef unsigned char BOOL;
 	/* Exported constants --------------------------------------------------------*/
 	/* Exported macro ------------------------------------------------------------*/
 	/* Exported functions --------------------------------------------------------*/
-	char GenerateAPIPacket(char api_frame, char at_command[2], char frame_length[2], char *rawData);
+	char generateApiAtPacket(char packet[MAX_DATA], char api_frame, char at_command[2], char frame_length[2], char *raw_data);
 	//void generateApiArray(char delimiter, int length, char *data, char checksum);	
 	void generateApiArray(char delimiter, int length, char *data);
 	//void generateApiFrame(char delimiter, int length, char *data, char checksum);
