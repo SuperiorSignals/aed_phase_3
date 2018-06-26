@@ -238,3 +238,87 @@ void ApiPacket::replaceInvalidLength()
 		std::cout << "ERROR [void Apipacket::replaceInvalidLength()]: API frame data size is zero." << std::endl;
 	}
 }
+
+
+//*************************************************************DANE
+
+const int DATA = 512;
+
+class TXRQ_Packet
+{
+
+    public:
+     const char START = '~';
+     const char FRAME_TYPE = ' ';
+     const char TRANSMIT_OPT = '0';
+     const char TX_PROTOCOL = '0';
+  
+                               //Assign Nonconstant Variables with outside Data
+      void assignFrameID(const char x) { Frame_ID = x; }
+      void assignAddress(vector<char> a) { Destination_Address = a; }
+      void assignDPort(vector<char> d) { Destination_Port = d; }
+      void assignSrcPort(vector<char> s) { SourcePort = s; }
+      void assignPayload(vector<char> p) { PayLoad = p; }
+      
+                               //pass a vector and set as equal to existing member variable
+      char getFrameID() { return Frame_ID; }
+      void getDestination_Address(vector<char> a) { a = Destination_Address; }
+      void getDestination_Port(vector<char> a) { a = Destination_Port; }
+      void getSourcePort(vector<char> a) {a = SourcePort; }
+      void getPayload(vector<char> a) { a = PayLoad; }
+      
+                                //lumps protocol and transmit in with sourceport 
+      void Concat() { SourcePort.push_back(TX_PROTOCOL); SourcePort.push_back(TRANSMIT_OPT); }
+    
+                              //Takes all prepared data and assembles Packet
+      void BuildPacket();
+                              
+    private:
+      char Frame_ID;
+      vector<char> Destination_Address;
+      vector<char> Destination_Port;
+      vector<char> SourcePort;
+      vector<char> PayLoad;
+      
+      vector<char> TXPacket;    //Raw, no checksum
+};
+
+
+
+int main()
+{
+    cout<<"Starting TX Request"<<endl;
+    vector<char> Address;
+    vector<char> Destination;
+    vector<char> Source;
+    vector<char> Payload;
+    
+    TXRQ_Packet MyPacket;
+    
+
+    MyPacket.assignFrameID(1);
+    MyPacket.assignAddress(Address);
+    MyPacket.assignDPort(Destination);
+    MyPacket.assignSrcPort(Source);
+    MyPacket.assignPayload(Payload);
+    
+    MyPacket.BuildPacket();
+    
+    
+    return 0; 
+}
+    
+void TXRQ_Packet::BuildPacket()
+{
+    TXPacket.push_back(START);
+    TXPacket.push_back(FRAME_TYPE);
+    TXPacket.push_back(Frame_ID);
+    TXPacket.insert(TXPacket.end(), Destination_Address.begin(), Destination_Address.end());
+    TXPacket.insert(TXPacket.end(), Destination_Port.begin(), Destination_Port.end());
+    Concat();                   //concats TX_PROTOCOL and TRANSMIT_OPT tp SourcePort
+    TXPacket.insert(TXPacket.end(), SourcePort.begin(), SourcePort.end());
+    TXPacket.insert(TXPacket.end(), PayLoad.begin(), PayLoad.end());
+	
+   return;
+}   
+    
