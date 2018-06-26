@@ -341,6 +341,9 @@ void test_menu(int selection)
 		break;
 	default:
 		break;
+	case 41:
+		test_function_41();   //add testfnct 41 proto
+		break;
 	}
 }
 
@@ -1557,7 +1560,67 @@ void test_function_39()
 
 }
 
-void test_function_40()
+void test_function_40()	//Set  UDP
 {
+	//XBee xbee;
+	const char AT_SET = '0x08';
+	SerialPort serialPort("/dev/ttymxc1", 115200);
+	XBeeCell xBeeCell;
+	char at_command[2] = { 'D','E' };
+	char api_frame[API_AT_TOTAL_LENGTH];
+	std::vector<char> inputBuffer;
+	std::vector<unsigned char> bufferDuplicate;
 
+	//xbee.setOperationMode(API_MODE);
+	//generateApiAtCommand(at_command, 0, 0, api_frame);
+	xBeeCell.apiModeOperation();
+	//std::cout << "Api Mode Entry Complete" << std::endl;
+	generateApiAtCommandNoParam(at_command, 1, api_frame);
+	serialPort.open();
+	//displayHexadecimal(convertArrayToVector(api_frame, API_AT_NO_PARAM_TOTAL_LENGTH));
+	serialPort.write(convertArrayToVector(api_frame, API_AT_NO_PARAM_TOTAL_LENGTH));
+	serialPort.timedRead(inputBuffer, 5.0);
+	bufferDuplicate = convertVectorToUnsigned(inputBuffer);
+	displayHexadecimal(bufferDuplicate);
+	
+	at_command[2] = { 'D', 'L' };
+	char api_frame = 'AT_SET';
+	//char frame_length = "0X";
+	char rawData[] =  
+	serialPort.write(
+	 
+	
+	xBeeCell.apiModeExit();
+	//std::cout << "Api Mode Exit Complete" << std::endl;
+
+	system("pause");
 }
+
+char GenerateAPIPacket(char api_frame, char at_command[2], char frame_length[2], char *rawData)
+{ 
+	char CheckSum;
+	const int DATA = 512;
+	int i ;
+	int j;
+	int k;
+	char Packet[DATA];
+	const char START = '~';
+	Packet[0] = START;
+	Packet[1] = data_length[0];
+	Packet[2] = data_length[1];
+	Packet[3] = api_frame;
+	Packet[4] = at_command[0];
+	Packet[5] = at_command[1];
+	for(i = 6, j = 0; j < (frame_length - 3); i++, j++)  //3 being the Data Length - ApiFrame and AT COMMAND/ Denoted here raw data
+	{ 
+		Packet[i] = rawData[j]; 
+	}
+	
+	CheckSum = generateApiChecksum(Packet, data_length)
+	packet[i] = CheckSum;
+        return Packet;
+}
+	
+	
+		
+	
