@@ -286,21 +286,21 @@ void TxrqPacket::buildPacket()
 	char c;
 	int length;
 	int temporary;
-	char upperNibble;
-	char lowerNibble;
+	char upperByte;
+	char lowerByte;
 	
 	length = 1 + 1 + 4 + 2 + 2 + 1 + 1 + payLoad.size();
-	temporary = 0b11110000;
+	temporary = 0xF0;
 	temporary = temporary & length;
-	temporary >> 4;
-	upperNibble = temporary;
-	temporary = 0b00001111;
+	temporary >> 8;
+	upperByte = temporary;
+	temporary = 0x0F;
 	temporary = temporary & length;
-	lowerNibble = temporary;
+	lowerByte = temporary;
 
     txPacket.push_back(START);
-	txPacket.push_back(upperNibble);
-	txPacket.push_back(lowerNibble);
+	txPacket.push_back(upperByte);
+	txPacket.push_back(lowerByte);
     txPacket.push_back(FRAME_TYPE);
     txPacket.push_back(frameId);
     txPacket.insert(txPacket.end(), destinationAddress.begin(), destinationAddress.end());

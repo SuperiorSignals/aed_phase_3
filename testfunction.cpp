@@ -321,6 +321,7 @@ void test_function_4()
 	TxrqPacket txrqPacket;
 	char at_command[2] = { 'I','M' };
 	char api_frame[API_AT_TOTAL_LENGTH];
+	char choice;
 	int selection;
 	bool validation;
 
@@ -369,8 +370,8 @@ void test_function_4()
 	displayHexadecimal(packet);
 	do {
 		std::cout << "Continue? (y/n): ";
-		if (std::cin >> selection) {
-			if (selection == 'y' || selection == 'n') {
+		if (std::cin >> choice) {
+			if (choice == 'y' || choice == 'n') {
 				validation = true;
 			} else {
 				validation = false;
@@ -381,7 +382,7 @@ void test_function_4()
 			validation = false;
 		}
 	} while (validation == false);
-	if (selection == 'n') {
+	if (choice == 'n') {
 		return;
 	}
 	xBeeCell.apiModeOperation();

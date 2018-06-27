@@ -46,7 +46,7 @@ void generateApiAtPacket(char packet[MAX_DATA], char api_frame, char at_command[
 	int data_length;
 
 	data_length = frame_length[0];
-	data_length << 4;
+	data_length << 8;
 	data_length += frame_length[1];
 	packet[0] = AT_START;
 	packet[1] = frame_length[0];

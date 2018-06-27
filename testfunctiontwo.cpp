@@ -38,7 +38,7 @@ extern PacketStorage packetStorage;
 extern time_t mainStartTime;
 extern time_t lastReportTime;
 //extern double EMPIRICAL_CLOCK_ADJUSTMENT;
-double clock_adjustment;
+//extern double clock_adjustment;
 
 /*
 double clock_test(int duration)
