@@ -349,7 +349,7 @@ void test_function_4()
 			validation = false;
 		}
 	} while (validation == false);
-	for (char i = 1; i < 50; i++) {
+	for (char i = 1; i < selection; i++) {
 		payload.push_back(i);
 	}
 	destinationAddress.push_back(135);

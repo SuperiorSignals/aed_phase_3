@@ -50,9 +50,7 @@ public:
 // Author: Dane Rodriguez
 const int ARBITRARY_MAX_DATA = 512;
 
-class TxrqPacket
-{
-
+class TxrqPacket {
 public:
 	const char START = 0x7E;
 	const char FRAME_TYPE = 0x20;
@@ -86,6 +84,25 @@ private:
 	std::vector<char> sourcePort;
 	std::vector<char> payLoad;
 	std::vector<char> txPacket;    //Raw, no checksum
+};
+
+// Author: Dane Rodriguez
+
+void parseRxPacket(RxPacket input);
+
+enum RxPacketType { INVALID_RESPONSE, AT_RESPONSE, SMS_RESPONSE };
+
+class RxPacket {
+public:
+	 RxPacketType categorize(std::vector<char> &P, char &FT);
+	std::vector<char> getPacket();
+	void parseAt(std::vector<char> &P, char SFID, char ATCMMD, char STS, char PV);
+	void parseSms(std::vector<char> &P, char PN[], char MSSGE[]);
+	void setPacket(std::vector<char> input);
+	bool verify(std::vector<char> &P, char &LSB, char &MSB);
+
+private:
+	std::vector<char> packet;
 };
 
 #endif // !APIPACKET_H_
