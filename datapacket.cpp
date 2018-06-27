@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include "adcpin.h"
+#include "vectorstring.h"
 
 unsigned char DataPacket::packetIdentifier = 0;
 
@@ -82,6 +83,59 @@ std::vector<char> DataPacket::getPacket(PacketType event, Configuration config)
 	length = packet.size();
 	for (int i = 0; i < length; i++) {
 		output.push_back(static_cast<char>(packet[i]));
+	}
+	packetIdentifier++;
+
+	return output;
+}
+
+std::vector<char> DataPacket::getPacketTranslation(PacketType event)
+{
+	int length;
+	std::vector<char> input;
+	std::vector<char> output;
+	std::vector<char> temporary;
+	char nibbleLow;
+	char nibbleHigh;
+
+	populatePacket(event);
+	length = packet.size();
+	for (int i = 0; i < length; i++) {
+		input.push_back(static_cast<char>(packet[i]));
+	}
+	for (int i = 0; i < length; i++) {
+		temporary = spellOutCharacter(input[i]);
+		nibbleLow = temporary[1];
+		nibbleHigh = temporary[0];
+		output.push_back(nibbleLow);
+		output.push_back(nibbleHigh);
+	}
+	packetIdentifier++;
+
+	return output;
+}
+
+std::vector<char> DataPacket::getPacketTranslation(PacketType event, Configuration config)
+{
+	int length;
+	std::vector<char> input;
+	std::vector<char> output;
+	std::vector<char> temporary;
+	char nibbleLow;
+	char nibbleHigh;
+
+	configuration = config;
+	populatePacket(event);
+	length = packet.size();
+	for (int i = 0; i < length; i++) {
+		input.push_back(static_cast<char>(packet[i]));
+	}
+	for (int i = 0; i < length; i++) {
+		temporary = spellOutCharacter(input[i]);
+		nibbleLow = temporary[1];
+		nibbleHigh = temporary[0];
+		output.push_back(nibbleLow);
+		output.push_back(nibbleHigh);
 	}
 	packetIdentifier++;
 

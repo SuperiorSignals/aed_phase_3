@@ -48,7 +48,7 @@ public:
 
 
 // Author: Dane Rodriguez
-const int DATA = 512;
+const int ARBITRARY_MAX_DATA = 512;
 
 class TxrqPacket
 {

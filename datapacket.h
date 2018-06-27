@@ -70,6 +70,8 @@ public:
 	//std::vector<char> getPacket();
 	std::vector<char> getPacket(PacketType event);
 	std::vector<char> getPacket(PacketType event, Configuration config);
+	std::vector<char> getPacketTranslation(PacketType event);
+	std::vector<char> getPacketTranslation(PacketType event, Configuration config);
 
 	void setDigitalInputOne(GpioPin input);
 	void setDigitalInputTwo(GpioPin input);

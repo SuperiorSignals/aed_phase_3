@@ -156,6 +156,34 @@ void XBeeMesh::sendData(std::string input)
 	writeString(input);
 }
 
+void XBeeMesh::sendDataTranslation(std::vector<char> input)
+{
+	int length;
+	std::vector<char> packet;
+	std::vector<char> output;
+	std::vector<char> temporary;
+	char nibbleLow;
+	char nibbleHigh;
+	std::string s;
+	
+	std::cout << "in void XBeeMesh::sendDataTranslation(std::vector<char>)";
+	std::cout << std::endl;
+	length = input.size();
+	for (int i = 0; i < length; i++) {
+		packet.push_back(static_cast<char>(input[i]));
+	}
+	for (int i = 0; i < length; i++) {
+		temporary = spellOutCharacter(packet[i]);
+		nibbleLow = temporary[1];
+		nibbleHigh = temporary[0];
+		output.push_back(nibbleLow);
+		output.push_back(nibbleHigh);
+	}
+	displayHexadecimal(input);
+	s = vectorToString(output);
+	sendData(s);
+}
+
 void XBeeMesh::setDestinationHigh(std::string input)
 {
 	enterCommandMode();

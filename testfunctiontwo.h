@@ -1,15 +1,16 @@
 #pragma once
-#ifndef TESTFUNCTION_H_
-#define TESTFUNCTION_H_
+#ifndef TESTFUNCTIONTWO_H_
+#define TESTFUNCTIONTWO_H_
 
 #include "gpsdata.h"
 
+/*
 double clock_test(int duration); // Return clock calibration constant
 void gpio_set(); // Set device IO
 unsigned char gpio_test(); // Return GPIO values
 void indicators(bool isGpsValid, bool isCellConnected); // Set indicator lights
 void report_shared(GpsData gpsData); // Log GPS data for display
-//void test_menu(int selection); // Allow selection of test functions
+void test_menu(int selection); // Allow selection of test functions
 
 void test_function_1(); // Test function for startup
 void test_function_2(); // Test IO expander GPIO
@@ -17,7 +18,7 @@ void test_function_2(); // Test IO expander GPIO
 //	Device test functions
 
 void test_function_3(); // Test device GPS
-void test_function_4(); // Test TxrqPacket class
+void test_function_4();
 void test_function_5();
 void test_function_6(); // Set device IO
 void test_function_7(); // Test device mesh
@@ -35,7 +36,6 @@ void test_function_18(); // Test new mesh functions
 void test_function_19(); // Test generation of API AT packets
 void test_function_20(); // Test address and port settings
 void test_function_21(); // Run arbitrary AT command by API
-
 
 void test_function_21(); // Test Micropython
 void test_function_22(); // Test API
@@ -58,8 +58,7 @@ void test_function_37(); // Test maintenance routine
 void test_function_38(); // Test duplicate removal
 void test_function_39(); // Test ADC
 void test_function_40(); // Test standard routine on SBC Pro
-
-/*
+*/
 void test_function_41();
 void test_function_42();
 void test_function_43();
@@ -90,6 +89,6 @@ void test_function_67();
 void test_function_68();
 void test_function_69();
 void test_function_70();
-*/
-#endif // !TESTFUNCTION_H_
+
+#endif // !TESTFUNCTIONTWO_H_
 

@@ -31,6 +31,7 @@ public:
 	std::vector<char> receiveData(double duration);
 	void sendData(std::vector<char> input);
 	void sendData(std::string input);
+	void sendDataTranslation(std::vector<char> input);
 	void setDestinationHigh(std::string input);
 	void setDestinationLow(std::string input);
 	void setNetworkId(std::string input);

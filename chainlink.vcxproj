@@ -156,6 +156,7 @@
     <ClCompile Include="serialport.cpp" />
     <ClCompile Include="serial_interface.c" />
     <ClCompile Include="testfunction.cpp" />
+    <ClCompile Include="testfunctiontwo.cpp" />
     <ClCompile Include="vectorstring.cpp" />
     <ClCompile Include="xbee.cpp" />
     <ClCompile Include="xbeecell.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="serialport.h" />
     <ClInclude Include="serial_interface.h" />
     <ClInclude Include="testfunction.h" />
+    <ClInclude Include="testfunctiontwo.h" />
     <ClInclude Include="vectorstring.h" />
     <ClInclude Include="visual_studio.h" />
     <ClInclude Include="xbee.h" />

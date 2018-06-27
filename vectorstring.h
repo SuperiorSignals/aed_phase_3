@@ -13,6 +13,7 @@
 std::vector<std::string> commaStringToVector(std::string input);
 std::vector<std::string> newlineVectorToString(std::vector<char> input);
 std::string vectorToString(std::vector<char> input);
+std::vector<char> spellOutCharacter(char input);
 std::vector<std::string> splitString(std::string input, char delimiter);
 std::vector<char> stringToVector(std::string input);
 

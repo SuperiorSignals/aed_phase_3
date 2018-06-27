@@ -99,6 +99,33 @@ std::vector<std::string> splitString(std::string input, char delimiter)
 }
 */
 
+std::vector<char> spellOutCharacter(char input)
+{
+	const unsigned char MASK_LOW = 0b00001111;
+	const unsigned char MASK_HIGH = 0b11110000;
+	char nibbleLow;
+	char nibbleHigh;
+	std::vector<char> output;
+
+	nibbleLow = MASK_LOW & input;
+	if (nibbleLow < 0x0A) {
+		nibbleLow = nibbleLow + 0x30;
+	} else {
+		nibbleLow = nibbleLow + 0x37;
+	}
+	nibbleHigh = MASK_HIGH & input;
+	nibbleHigh >> 4;
+	if (nibbleHigh < 0x0A) {
+		nibbleHigh = nibbleHigh + 0x30;
+	} else {
+		nibbleHigh = nibbleHigh + 0x37;
+	}
+	output.push_back(nibbleHigh);
+	output.push_back(nibbleLow);
+
+	return output;
+}
+
 std::vector<std::string> splitString(std::string input, char delimiter)
 {
 	std::vector<std::string> output;

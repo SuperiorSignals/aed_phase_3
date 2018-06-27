@@ -75,6 +75,9 @@
     <ClCompile Include="adcpin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="testfunctiontwo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api_mode.h">
@@ -135,6 +138,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="adcpin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="testfunctiontwo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
