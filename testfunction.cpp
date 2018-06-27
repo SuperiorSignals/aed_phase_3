@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <vector>
 #include "adcpin.h"
 #include "apipacket.h"
@@ -320,6 +321,8 @@ void test_function_4()
 	TxrqPacket txrqPacket;
 	char at_command[2] = { 'I','M' };
 	char api_frame[API_AT_TOTAL_LENGTH];
+	int selection;
+	bool validation;
 
 	std::vector<char> payload;
 	std::vector<char> destinationAddress;
@@ -330,6 +333,21 @@ void test_function_4()
 	std::vector<char> inputBuffer;
 	std::vector<unsigned char> bufferDuplicate;
 
+	do {
+		std::cout << "Enter packet length: ";
+		if (std::cin >> selection) {
+			if (selection < 256) {
+				validation = true;
+			} else {
+				std::cout << "Number too large!" << std::endl;
+				validation = false;
+			}
+		} else {
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			validation = false;
+		}
+	} while (validation == false);
 	for (char i = 1; i < 50; i++) {
 		payload.push_back(i);
 	}
@@ -347,7 +365,25 @@ void test_function_4()
 	txrqPacket.setPayLoad(payload);
 	txrqPacket.buildPacket();
 	packet = txrqPacket.getTxPacket();
-
+	std::cout << "Sending the following packet:" << std::endl;
+	displayHexadecimal(packet);
+	do {
+		std::cout << "Continue? (y/n): ";
+		if (std::cin >> selection) {
+			if (selection == 'y' || selection == 'n') {
+				validation = true;
+			} else {
+				validation = false;
+			}
+		} else {
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			validation = false;
+		}
+	} while (validation == false);
+	if (selection == 'n') {
+		return;
+	}
 	xBeeCell.apiModeOperation();
 	serialPort.open();
 	serialPort.write(packet);

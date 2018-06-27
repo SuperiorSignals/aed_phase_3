@@ -1,6 +1,7 @@
 #include <exception>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <vector>
 #include "configuration.h"
 #include "datapacket.h"
