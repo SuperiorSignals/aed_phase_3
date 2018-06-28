@@ -298,21 +298,21 @@ void TxrqPacket::buildPacket()
 	temporary = temporary & length;
 	lowerByte = temporary;
 
-    txPacket.push_back(START);
-	txPacket.push_back(upperByte);
-	txPacket.push_back(lowerByte);
-    txPacket.push_back(FRAME_TYPE);
-    txPacket.push_back(frameId);
-    txPacket.insert(txPacket.end(), destinationAddress.begin(), destinationAddress.end());
-    txPacket.insert(txPacket.end(), destinationPort.begin(), destinationPort.end());
-	txPacket.push_back(TX_PROTOCOL);
-	txPacket.push_back(TRANSMIT_OPT);
-    txPacket.insert(txPacket.end(), sourcePort.begin(), sourcePort.end());
-    txPacket.insert(txPacket.end(), payLoad.begin(), payLoad.end());
-	c = generateApiChecksum(txPacket);
-	txPacket.push_back(c);
-}   
-    
+txPacket.push_back(START);
+txPacket.push_back(upperByte);
+txPacket.push_back(lowerByte);
+txPacket.push_back(FRAME_TYPE);
+txPacket.push_back(frameId);
+txPacket.insert(txPacket.end(), destinationAddress.begin(), destinationAddress.end());
+txPacket.insert(txPacket.end(), destinationPort.begin(), destinationPort.end());
+txPacket.push_back(TX_PROTOCOL);
+txPacket.push_back(TRANSMIT_OPT);
+txPacket.insert(txPacket.end(), sourcePort.begin(), sourcePort.end());
+txPacket.insert(txPacket.end(), payLoad.begin(), payLoad.end());
+c = generateApiChecksum(txPacket);
+txPacket.push_back(c);
+}
+
 char generateApiChecksum(std::vector<char> input)
 {
 	int length;
@@ -321,7 +321,7 @@ char generateApiChecksum(std::vector<char> input)
 
 	length = input.size();
 	j = 0;
-	for (i = 0; i < length; i++) {
+	for (i = 0; i < (length - 3); i++) {
 		j += input[i + 3];
 	}
 	j = j & 0x00FF;
@@ -334,40 +334,26 @@ char generateApiChecksum(std::vector<char> input)
 
 // Author: Dane Rodriguez
 // Packet Parser Program (PPP)
-const int DATA_SIZE = 512;
-const char START_DEL = 0x7E;
-char Error_Code;
 
-//Frame Types
-const char RECEIVE_SMS = 0x9F;
-const char RECEIVE_AT = 0x88;
-
-void parseRxPacket(RxPacket input)
+CellRxPacket::CellRxPacket(std::vector<char> initial)
 {
-	char lengthMsb;
-	char lengthLsb;
-	char frameType;                 //temp
-	char frameId;
-	char atCommand;
-	char status;
-	char parameterValue;
-	char checkSum;
-	char phoneNumber[DATA_SIZE];
-	char message[DATA_SIZE];
-	std::vector<char> recievedData;
+	packet = initial;
+	parseRxPacket();
+}
 
-	if (input.verify(recievedData, lengthLsb, lengthMsb)) {
-		switch (input.categorize(recievedData, frameType)) {
+void CellRxPacket::parseRxPacket()
+{
+	if (this->verify()) {
+		switch (this->categorize()) {
 		case INVALID_RESPONSE:
-			Error_Code = 2;
 			break;
 		case AT_RESPONSE:
-			input.parseAt(recievedData, frameId, atCommand, status, parameterValue);
+			this->parseAt();
 			//ValidateChecksum;
 			//DisplayAT();
 			break;
 		case SMS_RESPONSE:
-			input.parseSms(recievedData, phoneNumber, message);
+			this->parseSms();
 			//DisplaySMS();
 			break;
 		}
@@ -376,60 +362,176 @@ void parseRxPacket(RxPacket input)
 	}
 }
 
-RxPacketType RxPacket::categorize(std::vector<char> &P, char &Store_FrameType)
+RxPacketType CellRxPacket::categorize()
 {
-	P[3] = Store_FrameType;
+	frameType = packet[4];
 
-	if (Store_FrameType == RECEIVE_AT) {
+	if (frameType == RECEIVE_AT) {
 		return AT_RESPONSE;
 	}
-	if (Store_FrameType == RECEIVE_SMS) {
+	if (frameType == RECEIVE_SMS) {
 		return SMS_RESPONSE;
 	}
 
 	return INVALID_RESPONSE;
 }
 
-std::vector<char> RxPacket::getPacket()
+std::vector<char> CellRxPacket::getPacket()
 {
 	return packet;
 }
 
-void RxPacket::parseAt(std::vector<char> &P, char SFID, char ATCMMD, char STS, char PV)
+void CellRxPacket::parseAt()
 {
-	P[4] = SFID;
-	P[5] = ATCMMD;
-	P[6] = STS;
-	P[7] = PV;
-}
-
-void RxPacket::parseSms(std::vector<char> &P, char PN[], char MSSGE[])
-{
-	int i;
-	int j;
-	int end = (P.back());
-
-	for (i = 4, j = 0; i < 24; i++, j++) {
-		PN[j] = P[i];
-	}
-	for (i = 24, j = 0; i < end; i++, j++) {
-		MSSGE[j] = P[i];
+	if (packet.size() > 8) {
+		frameId = packet[5];
+		atCommand.clear();
+		atCommand.push_back(packet[6]);
+		atCommand.push_back(packet[7]);
+		status = packet[8];
+		for (int i = 9; i < (packet.size() - 1); i++) {
+			parameterValue.push_back(packet[i]);
+		}
+	} else {
+		std::cout << "ERROR [void RxPacket::parseAt()]: invalid packet length";
+		std::cout << std::endl;
 	}
 }
 
-void RxPacket::setPacket(std::vector<char> input)
+void CellRxPacket::parseSms()
+{
+	if (packet.size() > 23) {
+		phoneNumber.clear();
+		for (int i = 4; i < 24; i++) {
+			phoneNumber.push_back(packet[i]);
+		}
+		message.clear();
+		for (int i = 24; i < (packet.size() - 1); i++) {
+			message.push_back(packet[i]);
+		}
+	} else {
+		std::cout << "ERROR [void RxPacket::parseSms()]: invalid packet length";
+		std::cout << std::endl;
+	}
+}
+
+void CellRxPacket::setPacket(std::vector<char> input)
 {
 	packet = input;
+	parseRxPacket();
 }
 
-bool RxPacket::verify(std::vector<char> &P, char &Length_LSB, char &Length_MSB)
+bool CellRxPacket::verify()
 {
-	if (P[0] == START_DEL) {
+	int length;
+
+	if (packet[0] == START_DEL) {
+		length = packet[1];
+		length << 8;
+		length += packet[2];
+		if (length == this->getLength()) {
+			if (this->validateChecksum()) {
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}
+
+bool CellRxPacket::validateChecksum()
+{
+	std::vector<char> temporary;
+	char checkValue;
+
+	temporary = packet;
+	temporary.pop_back();
+	checkValue = generateApiChecksum(temporary);
+	if (checkValue == checkSum) {
+		return true;
+	}
+
+	return false;
+}
+
+int CellRxPacket::getLength()
+{
+	int output;
+
+	output = packet.size() - 4 - 1;
+
+	return output; 
+}
+
+char CellRxPacket::getFrameType() { return frameType; }
+char CellRxPacket::getFrameId() { return frameId; }
+std::vector<char> CellRxPacket::getAtCommand() { return atCommand; }
+char CellRxPacket::getStatus() { return status; }
+std::vector<char> CellRxPacket::getParameterValue() { return parameterValue; }
+char CellRxPacket::getCheckSum() { return checkSum; }
+std::vector<char> CellRxPacket::getPhoneNumber() { return phoneNumber; }
+std::vector<char> CellRxPacket::getMessage() { return message; }
+
+//DIGIMESH Packet Retrieval
+
+
+//Function Prototypes
+bool Verify(std::vector<char> &P, char &LSB, char &MSB);
+void ParsePacket(std::vector<char> &P, char ADD[], char &REOPT, char RD[]);
+
+const char START = 0x7E;
+const int DATA = 512;
+
+//Frame Types
+const char RX_Frame_TYPE = 0x90;
+const char RESERVED_MSB = 0xFF;
+const char RESERVED_LSB = 0xFE;
+
+int RecievePacket()
+{
+	//Variables for the Main Program
+	std::vector<char> PacketData;
+	char Length_MSB;
+	char Length_LSB;
+	char Address[9];
+	char RecieveOpions;
+	char RecievedData[DATA];
+
+
+	if (Verify(PacketData, Length_LSB, Length_MSB))  //Check START
+	{
+		ParsePacket(PacketData, Address, RecieveOpions, RecievedData);
+	}
+
+	return 0;
+}
+
+
+bool Verify(std::vector<char> &P, char &Length_LSB, char &Length_MSB)
+{
+	if (P[0] == START && P[3] == RX_Frame_TYPE) {
 		P[1] = Length_MSB;
 		P[2] = Length_LSB;
 		return true;
 	} else {
-		Error_Code = '1';
 		return false;
 	}
+}
+
+
+void ParsePacket(std::vector<char> &P, char ADD[], char &REOPT, char RD[])
+{
+	int i;
+	int j;
+	int end = P.back();
+
+	for (i = 4, j = 0; i<12; i++, j++) {
+		ADD[j] = P[i];
+	}
+
+	REOPT = P[14];
+	for (i = 15, j = 0; i<end; i++, j++) {
+		P[i] = RD[j];
+	}
+	return;
 }

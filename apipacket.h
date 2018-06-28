@@ -88,21 +88,55 @@ private:
 
 // Author: Dane Rodriguez
 
-void parseRxPacket(RxPacket input);
-
 enum RxPacketType { INVALID_RESPONSE, AT_RESPONSE, SMS_RESPONSE };
 
-class RxPacket {
+class CellRxPacket {
 public:
-	 RxPacketType categorize(std::vector<char> &P, char &FT);
+	CellRxPacket(std::vector<char> initial);
+	RxPacketType categorize();
 	std::vector<char> getPacket();
-	void parseAt(std::vector<char> &P, char SFID, char ATCMMD, char STS, char PV);
-	void parseSms(std::vector<char> &P, char PN[], char MSSGE[]);
 	void setPacket(std::vector<char> input);
-	bool verify(std::vector<char> &P, char &LSB, char &MSB);
+
+	int getLength();
+	char getFrameType();
+	char getFrameId();
+	std::vector<char> getAtCommand();
+	char getStatus();
+	std::vector<char> getParameterValue();
+	char getCheckSum();
+	std::vector<char> getPhoneNumber();
+	std::vector<char> getMessage();
+
+	const int DATA_SIZE = 512;
+	const char START_DEL = 0x7E;
+
+	//Frame Types
+	const char RECEIVE_SMS = 0x9F;
+	const char RECEIVE_AT = 0x88;
 
 private:
+	void parseRxPacket();
+	bool validateChecksum();
+
+	void parseAt();
+	void parseSms();
+	bool verify(); // Verify start delimiter, length, and checksum
+
 	std::vector<char> packet;
+	char lengthMsb;
+	char lengthLsb;
+	char frameType;
+	char frameId;
+	std::vector<char> atCommand;
+	char status;
+	std::vector<char> parameterValue;
+	char checkSum;
+	std::vector<char> phoneNumber;
+	std::vector<char> message;
+};
+
+class MeshRxPacket {
+
 };
 
 #endif // !APIPACKET_H_
