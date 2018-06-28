@@ -396,7 +396,39 @@ void test_function_4()
 
 void test_function_5()
 {
+	SerialPort serialPort("/dev/ttymxc1", 115200);
+	XBeeCell xBeeCell;
+	char at_command[2] = { 'D','E' };
+	char raw_data[256];
+	char frame_length[2];
+	char packet[512];
+	char api_frame[API_AT_TOTAL_LENGTH];
+	std::vector<char> inputBuffer;
+	std::vector<unsigned char> bufferDuplicate;
+	std::vector<char> payload;
+	std::vector<char> atCommand;
 
+	frame_length[0] = 0;
+	frame_length[1] = 1 + 1 + 2 + 2;
+	raw_data[0] = 0x14;
+	raw_data[1] = 0x3C;
+	xBeeCell.apiModeOperation();
+	generateApiAtPacket(packet, 1, at_command, frame_length, raw_data);
+	serialPort.open();
+	serialPort.write(convertArrayToVector(packet, static_cast<int>(3 + frame_length[1] + 1)));
+	serialPort.timedRead(inputBuffer, 1.0);
+	bufferDuplicate = convertVectorToUnsigned(inputBuffer);
+	displayHexadecimal(bufferDuplicate);
+	xBeeCell.apiModeExit();
+	CellRxPacket cellRxPacket(inputBuffer);
+	std::cout << "inputBuffer: ";
+	displayHexadecimal(inputBuffer);
+	atCommand = cellRxPacket.getAtCommand();
+	std::cout << "At command: ";
+	displayHexadecimal(atCommand);
+	payload = cellRxPacket.getParameterValue();
+	std::cout << "Payload: ";
+	displayHexadecimal(payload);
 }
 
 void test_function_6()

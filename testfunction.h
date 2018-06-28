@@ -18,7 +18,7 @@ void test_function_2(); // Test IO expander GPIO
 
 void test_function_3(); // Test device GPS
 void test_function_4(); // Test TxrqPacket class
-void test_function_5();
+void test_function_5(); // Test CellRxPacket class
 void test_function_6(); // Set device IO
 void test_function_7(); // Test device mesh
 void test_function_8(); // Test GPS

@@ -292,7 +292,7 @@ void TxrqPacket::buildPacket()
 	length = 1 + 1 + 4 + 2 + 2 + 1 + 1 + payLoad.size();
 	temporary = 0xFF00;
 	temporary = temporary & length;
-	temporary >> 8;
+	temporary = temporary >> 8;
 	upperByte = temporary;
 	temporary = 0x00FF;
 	temporary = temporary & length;
@@ -346,6 +346,8 @@ void CellRxPacket::parseRxPacket()
 	if (this->verify()) {
 		switch (this->categorize()) {
 		case INVALID_RESPONSE:
+			std::cout << "Error [void CellRxPacket::parseRxPacket()]: ";
+			std::cout << "unknown packet type" << std::endl;
 			break;
 		case AT_RESPONSE:
 			this->parseAt();
@@ -358,13 +360,14 @@ void CellRxPacket::parseRxPacket()
 			break;
 		}
 	} else {
-		//input.fail();
+		std::cout << "ERROR [void CellRxPacket::parseRxPacket()]: ";
+		std::cout << "failed to verify packet." << std::endl;
 	}
 }
 
 RxPacketType CellRxPacket::categorize()
 {
-	frameType = packet[4];
+	frameType = packet[3];
 
 	if (frameType == RECEIVE_AT) {
 		return AT_RESPONSE;
@@ -384,12 +387,12 @@ std::vector<char> CellRxPacket::getPacket()
 void CellRxPacket::parseAt()
 {
 	if (packet.size() > 8) {
-		frameId = packet[5];
+		frameId = packet[4];
 		atCommand.clear();
+		atCommand.push_back(packet[5]);
 		atCommand.push_back(packet[6]);
-		atCommand.push_back(packet[7]);
-		status = packet[8];
-		for (int i = 9; i < (packet.size() - 1); i++) {
+		status = packet[7];
+		for (int i = 8; i < (packet.size() - 1); i++) {
 			parameterValue.push_back(packet[i]);
 		}
 	} else {
@@ -427,18 +430,29 @@ bool CellRxPacket::verify()
 
 	if (packet[0] == START_DEL) {
 		length = packet[1];
-		length << 8;
+		length = length << 8;
 		length += packet[2];
 		if (length == this->getLength()) {
 			if (this->validateChecksum()) {
 				return true;
+			} else {
+				std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+				std::cout << "invalid checksum" << std::endl;
 			}
+		} else {
+			std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+			std::cout << "invalid length " << length;
+			std::cout << " vs. " << this->getLength() << std::endl;
 		}
+	} else {
+		std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+		std::cout << "invalid start delimiter" << std::endl;
 	}
 	
 	return false;
 }
 
+/*
 bool CellRxPacket::validateChecksum()
 {
 	std::vector<char> temporary;
@@ -453,12 +467,31 @@ bool CellRxPacket::validateChecksum()
 
 	return false;
 }
+*/
+
+bool CellRxPacket::validateChecksum()
+{
+	unsigned int temporary;
+
+	temporary = 0;
+	if (packet.size()  > 3) {
+		for (int i = 3; i < packet.size(); i++)	{
+			temporary += packet[i];
+		}
+		temporary &= 0x00FF;
+		if (temporary == 0xFF) {
+			return true;
+		}
+	}
+
+	return false;
+ }
 
 int CellRxPacket::getLength()
 {
 	int output;
 
-	output = packet.size() - 4 - 1;
+	output = packet.size() - 4;
 
 	return output; 
 }
@@ -473,7 +506,6 @@ std::vector<char> CellRxPacket::getPhoneNumber() { return phoneNumber; }
 std::vector<char> CellRxPacket::getMessage() { return message; }
 
 //DIGIMESH Packet Retrieval
-
 
 //Function Prototypes
 bool Verify(std::vector<char> &P, char &LSB, char &MSB);
