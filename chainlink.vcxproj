@@ -145,6 +145,7 @@
     <ClCompile Include="apipacket.cpp" />
     <ClCompile Include="api_mode.c" />
     <ClCompile Include="configuration.cpp" />
+    <ClCompile Include="dane.cpp" />
     <ClCompile Include="datapacket.cpp" />
     <ClCompile Include="geofence.cpp" />
     <ClCompile Include="gpiopin.cpp" />

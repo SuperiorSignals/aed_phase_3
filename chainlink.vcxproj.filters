@@ -78,6 +78,9 @@
     <ClCompile Include="testfunctiontwo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api_mode.h">

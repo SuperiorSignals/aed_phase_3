@@ -1,75 +1,146 @@
-/******************************  Assembly For TX and AT For XBEE
+#include <vector>
 
-     const char START = '0x7E';
-     const char AT_FRAME_TYPE = '0x08';
-     const char TX_FRAME_TYPE = '0x10';
-     
-    const char RESERVED_MSB = '0xFF';
-    const char RESERVED_LSB = '0xFE';
-
-     
-void AssemblePrePacket( vector<char> myPacket, char FID, char MSB, char LSB);
-void AssembleAT( vector<char> myPacket, vector<char> ATCMMD, vector<char> Parameter);
-void AssembleTX_Request( vector<char> myPacket, vector<char> ADD, char BRRAD);
+#include "apipacket.h"
+//  Assembly For TX and AT For XBEE
+MeshTxPacket::MeshTxPacket()
+{
+	transmitOptions = 0x01;
+}
 
 
-int main()
+std::vector<char> MeshTxPacket::getAtCommand() { return atCommand; }
+char MeshTxPacket::getBroadcastRadius() { return broadcastRadius; }
+std::vector<char> MeshTxPacket::getDestinationAddress() { return destinationAddress; }
+char MeshTxPacket::getFrameId() { return frameId; }
+int MeshTxPacket::getLength()
+{
+	unsigned int output;
+
+	output = lengthMsb;
+	output = output << 8;
+	output += lengthLsb;
+
+	return static_cast<int>(output);
+}
+std::vector<char> MeshTxPacket::getData() { return data; }
+
+int MeshTxPacket::calculatePreLength()
+{
+	return packet.size() - 3;
+}
+
+void MeshTxPacket::setAtCommand(std::vector<char> input) { atCommand = input; }
+void MeshTxPacket::setBroadcastRadius(char input) { broadcastRadius = input; }
+void MeshTxPacket::setDestinationAddress(std::vector<char> input) { destinationAddress = input; }
+void MeshTxPacket::setFrameId(char input) { frameId = input; }
+void MeshTxPacket::setLength(int input)
+{
+	lengthMsb = input & 0x00F0;
+	lengthLsb = input & 0x000F;
+}
+void MeshTxPacket::setData(std::vector<char> input) { data = input; }
+
+std::vector<char> MeshTxPacket::getPacket()
 {
 
-    //AT Variables
-    char Frame_ID;
-    vector<char> AT_Command;
-    vector<char> Parameter;
-    //TX Request Variables
-    vector<char> Destination_Address;
-    char Broadcast_Radius;
-    char Length_MSB;
-    char Length_LSB;
-  
-  vector<char> myPacket;
-
-
-AssemblePrePacket(myPacket, Frame_ID, Length_MSB, Length_LSB);
-//if(something)
-AssembleAT(myPacket, AT_Command, Parameter);
-//else
-AssembleTX_Request(myPacket, Destination_Address, Broadcast_Radius);
-
-//send packet via serial stuff
+	assemblePrePacket();
+	assembleTxRequest();
     
-    return 0; 
+    return packet; 
+}
+
+std::vector<char> MeshAtPacket::getPacket()
+{
+	assemblePrePacket();
+	assembleAt();
+
+	return packet;
+}
+
+void MeshTxPacket::assemblePrePacket()
+{
+	packet.push_back(START_DEL);
+	packet.push_back(lengthMsb);
+	packet.push_back(lengthLsb);
+	packet.push_back(TX_FRAME_TYPE);
+	packet.push_back(frameId);
 }
 
 
-void AssemblePrePacket(vector<char> myPacket, char FID, char MSB, char LSB)
+void MeshTxPacket::assembleTxRequest()
 {
-  myPacket.push_back(START);
-  myPacket.push_back(MSB);
-  myPacket.push_back(LSB);
-  //if(AT)
-  //myPacket.push_back(AT_FRAME_TYPE);
-  //else
-  //myPacket.push_back(TX_FRAME_TYPE);
-  
-  myPacket.push_back(FID);
-  return;
-}
-    
-void AssembleAT(vector<char> myPacket, vector<char> ATCMMD, vector<char> Parameter)
-{
-  myPacket.insert(myPacket.end(), ATCMMD.begin(), ATCMMD.end());
-  myPacket.insert(myPacket.end(), Parameter.begin(), Parameter.end());
-  //Do Checksum
-  return;
+	char c;
+	int length;
+
+    packet.insert(packet.end(), destinationAddress.begin(), destinationAddress.end());
+    packet.push_back(RESERVED_MSB);
+    packet.push_back(RESERVED_LSB);
+    packet.push_back(broadcastRadius);
+	packet.push_back(transmitOptions);
+	packet.insert(packet.end(), data.begin(), data.end());
+	length = calculatePreLength();
+	setLength(length);
+	packet[1] = lengthMsb;
+	packet[2] = lengthLsb;
+	c = generateApiChecksum(packet);
+	packet.push_back(c);
 }
 
-void AssembleTX_Request(vector<char> myPacket, vector<char> ADD, char BRRAD)
+std::vector<char> MeshAtPacket::getAtCommand() { return atCommand; }
+char MeshAtPacket::getBroadcastRadius() { return broadcastRadius; }
+std::vector<char> MeshAtPacket::getDestinationAddress() { return destinationAddress; }
+char MeshAtPacket::getFrameId() { return frameId; }
+int MeshAtPacket::getLength()
 {
-    myPacket.insert(myPacket.end(), ADD.begin(), ADD.end());
-    myPacket.push_back(RESERVED_MSB);
-    myPacket.push_back(RESERVED_LSB);
-    myPacket.push_back(BRRAD);
-    //do checksum
-    return;
+	unsigned int output;
+
+	output = lengthMsb;
+	output = output << 8;
+	output += lengthLsb;
+
+	return static_cast<int>(output);
 }
+std::vector<char> MeshAtPacket::getParameter() { return parameter; }
+
+int MeshAtPacket::calculatePreLength()
+{
+	return packet.size() - 3;
+}
+
+void MeshAtPacket::setAtCommand(std::vector<char> input) { atCommand = input; }
+void MeshAtPacket::setBroadcastRadius(char input) { broadcastRadius = input; }
+void MeshAtPacket::setDestinationAddress(std::vector<char> input) { destinationAddress = input; }
+void MeshAtPacket::setFrameId(char input) { frameId = input; }
+void MeshAtPacket::setLength(int input)
+{
+	lengthMsb = input & 0x00F0;
+	lengthLsb = input & 0x000F;
+}
+void MeshAtPacket::setParameter(std::vector<char> input) { parameter = input; }
+
+
+void MeshAtPacket::assemblePrePacket()
+{
+	packet.push_back(START_DEL);
+	packet.push_back(lengthMsb);
+	packet.push_back(lengthLsb);
+	packet.push_back(AT_FRAME_TYPE);
+	packet.push_back(frameId);
+}
+
+void MeshAtPacket::assembleAt()
+{
+	char c;
+	int length;
+
+	packet.insert(packet.end(), atCommand.begin(), atCommand.end());
+	packet.insert(packet.end(), parameter.begin(), parameter.end());
+	length = calculatePreLength();
+	setLength(length);
+	packet[1] = lengthMsb;
+	packet[2] = lengthLsb;
+	c = generateApiChecksum(packet);
+	packet.push_back(c);
+}
+
 

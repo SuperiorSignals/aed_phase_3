@@ -242,20 +242,20 @@ void ApiPacket::replaceInvalidLength()
 
 // Author: Dane Rodriguez
 //Assign Nonconstant Variables with outside Data
-void TxrqPacket::setDestinationAddress(std::vector<char> a) { destinationAddress = a; }
-void TxrqPacket::setDestinationPort(std::vector<char> d) { destinationPort = d; }
-void TxrqPacket::setFrameId(const char x) { frameId = x; }
-void TxrqPacket::setPayLoad(std::vector<char> p) { payLoad = p; }
-void TxrqPacket::setSourcePort(std::vector<char> s) { sourcePort = s; }
-void TxrqPacket::setTxPacket(std::vector<char> input) { txPacket = input; }
+void CellTxPacket::setDestinationAddress(std::vector<char> a) { destinationAddress = a; }
+void CellTxPacket::setDestinationPort(std::vector<char> d) { destinationPort = d; }
+void CellTxPacket::setFrameId(const char x) { frameId = x; }
+void CellTxPacket::setPayLoad(std::vector<char> p) { payLoad = p; }
+void CellTxPacket::setSourcePort(std::vector<char> s) { sourcePort = s; }
+void CellTxPacket::setTxPacket(std::vector<char> input) { txPacket = input; }
 
 //pass a std::vector and set as equal to existing member variable
-char TxrqPacket::getFrameId() { return frameId; }
-std::vector<char> TxrqPacket::getDestinationAddress() { return destinationAddress; }
-std::vector<char> TxrqPacket::getDestinationPort() { return destinationPort; }
-std::vector<char> TxrqPacket::getPayload() { return payLoad; }
-std::vector<char> TxrqPacket::getSourcePort() { return sourcePort; }
-std::vector<char> TxrqPacket::getTxPacket() { return txPacket; }
+char CellTxPacket::getFrameId() { return frameId; }
+std::vector<char> CellTxPacket::getDestinationAddress() { return destinationAddress; }
+std::vector<char> CellTxPacket::getDestinationPort() { return destinationPort; }
+std::vector<char> CellTxPacket::getPayload() { return payLoad; }
+std::vector<char> CellTxPacket::getSourcePort() { return sourcePort; }
+std::vector<char> CellTxPacket::getTxPacket() { return txPacket; }
 
 int accessory_main()
 {
@@ -263,7 +263,7 @@ int accessory_main()
     std::vector<char> Destination;
     std::vector<char> Source;
     std::vector<char> Payload;    
-    TxrqPacket MyPacket;    
+    CellTxPacket MyPacket;    
 
 	std::cout << "Starting TX Request" << std::endl;
     MyPacket.setFrameId(1);
@@ -276,12 +276,12 @@ int accessory_main()
     return 0; 
 }
 
-TxrqPacket::TxrqPacket()
+CellTxPacket::CellTxPacket()
 {
 	frameId = 1;
 }
     
-void TxrqPacket::buildPacket()
+void CellTxPacket::buildPacket()
 {
 	char c;
 	int length;
@@ -507,63 +507,102 @@ std::vector<char> CellRxPacket::getMessage() { return message; }
 
 //DIGIMESH Packet Retrieval
 
-//Function Prototypes
-bool Verify(std::vector<char> &P, char &LSB, char &MSB);
-void ParsePacket(std::vector<char> &P, char ADD[], char &REOPT, char RD[]);
-
-const char START = 0x7E;
-const int DATA = 512;
-
-//Frame Types
-const char RX_Frame_TYPE = 0x90;
-const char RESERVED_MSB = 0xFF;
-const char RESERVED_LSB = 0xFE;
-
-int RecievePacket()
+MeshRxPacket::MeshRxPacket(std::vector<char> initial)
 {
-	//Variables for the Main Program
-	std::vector<char> PacketData;
-	char Length_MSB;
-	char Length_LSB;
-	char Address[9];
-	char RecieveOpions;
-	char RecievedData[DATA];
-
-
-	if (Verify(PacketData, Length_LSB, Length_MSB))  //Check START
-	{
-		ParsePacket(PacketData, Address, RecieveOpions, RecievedData);
-	}
-
-	return 0;
+	packet = initial;
+	parseRxPacket();
 }
 
+std::vector<char> MeshRxPacket::getAddress() { return address; }
+std::vector<char> MeshRxPacket::getData() { return data; }
+std::vector<char> MeshRxPacket::getPacket() { return packet; }
+char MeshRxPacket::getReceiveOptions() { return receiveOptions; }
 
-bool Verify(std::vector<char> &P, char &Length_LSB, char &Length_MSB)
+void MeshRxPacket::setPacket(std::vector<char> input)
 {
-	if (P[0] == START && P[3] == RX_Frame_TYPE) {
-		P[1] = Length_MSB;
-		P[2] = Length_LSB;
-		return true;
+	packet = input;
+	parseRxPacket();
+}
+
+bool MeshRxPacket::verify()
+{
+	int length;
+
+	if (packet[0] == START_DEL) {
+		if (packet[3] == RX_FRAME_TYPE) {
+			length = packet[1];
+			length = length << 8;
+			length += packet[2];
+			if (length == this->getLength()) {
+				if (this->validateChecksum()) {
+					return true;
+				} else {
+					std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+					std::cout << "invalid checksum" << std::endl;
+				}
+			} else {
+				std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+				std::cout << "invalid length " << length;
+				std::cout << " vs. " << this->getLength() << std::endl;
+			}
+		} else {
+			std::cout << "WARNING [bool MeshRxPacket::verify()]: ";
+			std::cout <<"wrong packet type" << std::endl;
+		}
 	} else {
-		return false;
+		std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+		std::cout << "invalid start delimiter" << std::endl;
 	}
+
+	return false;
 }
 
-
-void ParsePacket(std::vector<char> &P, char ADD[], char &REOPT, char RD[])
+void MeshRxPacket::parseRxPacket()
 {
-	int i;
-	int j;
-	int end = P.back();
-
-	for (i = 4, j = 0; i<12; i++, j++) {
-		ADD[j] = P[i];
+	if (this->verify()) {
+		// Make sure this isn't backwards?
+		if (packet.size() > 14) {
+			for (int i = 4; i < 12; i++) {
+				address.push_back(packet[i]);
+			}
+			receiveOptions = packet[13];
+			for (int i = 14; i < (packet.size() - 1); i++) {
+				data.push_back(packet[i]);
+			}
+		} else {
+			std::cout << "ERROR [void MeshRxPacket::parseRxPacket()]: ";
+			std::cout << "invalid packet length" << std::endl;
+		}
+	} else {
+		std::cout << "ERROR [void MeshRxPacket::parseRxPacket()]: ";
+		std::cout << "unable to parse packet" << std::endl;
 	}
 
-	REOPT = P[14];
-	for (i = 15, j = 0; i<end; i++, j++) {
-		P[i] = RD[j];
+}
+
+bool MeshRxPacket::validateChecksum()
+{
+	unsigned int temporary;
+
+	temporary = 0;
+	if (packet.size()  > 3) {
+		for (int i = 3; i < packet.size(); i++) {
+			temporary += packet[i];
+		}
+		temporary &= 0x00FF;
+		if (temporary == 0xFF) {
+			return true;
+		}
 	}
-	return;
+
+	return false;
+}
+
+int MeshRxPacket::getLength()
+{
+	int output;
+
+	output = packet.size() - 4;
+
+	return output;
 }

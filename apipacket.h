@@ -50,14 +50,14 @@ public:
 // Author: Dane Rodriguez
 const int ARBITRARY_MAX_DATA = 512;
 
-class TxrqPacket {
+class CellTxPacket {
 public:
 	const char START = 0x7E;
 	const char FRAME_TYPE = 0x20;
 	const char TRANSMIT_OPT = 0;
 	const char TX_PROTOCOL = 0;
 
-	TxrqPacket();
+	CellTxPacket();
 	//Assign Nonconstant Variables with outside Data
 	void setDestinationAddress(std::vector<char> a);
 	void setDestinationPort(std::vector<char> d);
@@ -136,7 +136,127 @@ private:
 };
 
 class MeshRxPacket {
+public:
+	MeshRxPacket(std::vector<char> initial);
+	std::vector<char> getAddress();
+	int getLength();
+	std::vector<char> getPacket();
+	char getReceiveOptions();
+	std::vector<char> getData();
+	void setPacket(std::vector<char> input);
+	void parseRxPacket();
+	bool verify();
 
+private:
+	const char START_DEL = 0x7E;
+	const int DATA_SIZE = 512;
+	//Frame Types
+	const char RX_FRAME_TYPE = 0x90;
+	const char RESERVED_MSB = 0xFF;
+	const char RESERVED_LSB = 0xFE;
+
+	std::vector<char> packetData;
+	char lengthMsb;
+	char lengthLsb;
+	std::vector<char> address;
+	char receiveOptions;
+	std::vector<char> data;
+	std::vector<char> packet;
+
+	bool validateChecksum();
+
+
+};
+
+class MeshTxPacket {
+public:
+	MeshTxPacket();
+	std::vector<char> getPacket();
+
+	std::vector<char> getAtCommand();
+	char getBroadcastRadius();
+	std::vector<char> getDestinationAddress();
+	char getFrameId();
+	int getLength();
+	std::vector<char> getData();
+
+
+	void setAtCommand(std::vector<char> input);
+	void setBroadcastRadius(char input);
+	void setDestinationAddress(std::vector<char> input);
+	void setFrameId(char input);
+	void setLength(int input);
+	void setData(std::vector<char> input);
+
+	int calculatePreLength();
+
+private:
+	void assemblePrePacket();
+	void assembleTxRequest();
+
+	//AT Variables
+	char frameId;
+	std::vector<char> atCommand;
+	std::vector<char> data;
+	//TX Request Variables
+	std::vector<char> destinationAddress;
+	char broadcastRadius;
+	char lengthMsb;
+	char lengthLsb;
+	char transmitOptions;
+
+	std::vector<char> packet;
+
+	const char START_DEL = 0x7E;
+	const char AT_FRAME_TYPE = 0x08;
+	const char TX_FRAME_TYPE = 0x10;
+
+	const char RESERVED_MSB = 0xFF;
+	const char RESERVED_LSB = 0xFE;
+};
+
+class MeshAtPacket {
+public:
+	std::vector<char> getPacket();
+
+	std::vector<char> getAtCommand();
+	char getBroadcastRadius();
+	std::vector<char> getDestinationAddress();
+	char getFrameId();
+	int getLength();
+	std::vector<char> getParameter();
+	
+	void setAtCommand(std::vector<char> input);
+	void setBroadcastRadius(char input);
+	void setDestinationAddress(std::vector<char> input);
+	void setFrameId(char input);
+	void setLength(int input);
+	void setParameter(std::vector<char> input);
+
+	int calculatePreLength();
+
+private:
+	void assemblePrePacket();
+	void assembleAt();
+	
+	//AT Variables
+	char frameId;
+	std::vector<char> atCommand;
+	std::vector<char> parameter;
+	//TX Request Variables
+	std::vector<char> destinationAddress;
+	char broadcastRadius;
+	char lengthMsb;
+	char lengthLsb;
+
+	std::vector<char> packet;
+
+	const char START_DEL = 0x7E;
+	const char AT_FRAME_TYPE = 0x08;
+	const char TX_FRAME_TYPE = 0x10;
+
+	const char RESERVED_MSB = 0xFF;
+	const char RESERVED_LSB = 0xFE;
 };
 
 #endif // !APIPACKET_H_

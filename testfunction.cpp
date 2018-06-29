@@ -318,7 +318,7 @@ void test_function_4()
 {
 	SerialPort serialPort("/dev/ttymxc1", 115200);
 	XBeeCell xBeeCell;
-	TxrqPacket txrqPacket;
+	CellTxPacket txrqPacket;
 	char at_command[2] = { 'I','M' };
 	char api_frame[API_AT_TOTAL_LENGTH];
 	char choice;
