@@ -28,7 +28,7 @@ void test_function_11(); // Test micropython
 void test_function_12(); // Set clock constant
 void test_function_13(); // Build up standard routine
 void test_function_14(); // Test ability to  send text message
-void test_function_15();
+void test_function_15(); // Test DigiMesh API classes
 void test_function_16(); // Test digital outputs
 void test_function_17(); // Test mesh functions
 void test_function_18(); // Test new mesh functions

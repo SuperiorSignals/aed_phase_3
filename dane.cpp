@@ -1,24 +1,25 @@
-//Packet Parser Program (PPP)
-//All Rights Reserved
-//D_Rod Softworks
+#include <iostream>
+#include <vector>
+// Author: Dane Rodriguez
+// Packet Parser Program (PPP)
 
-
-        //Function Prototypes
-bool Verify( vector<char> &P, char &LSB, char &MSB);
-int Categorize( vector<char> &P, char &FT);
-void ParseAT( vector<char> &P, char SFID, char ATCMMD, char STS, char PV);
-void ParseSMS( vector<char> &P, char PN[], char MSSGE[] );
-void ParseTXStatus( vector<char> &P, char SFID, char Address[], char TX_Retry, char DeliveryStatus, char DiscoveryStatus);
+//Function Prototypes
+bool Verify( std::vector<char> &P, char &LSB, char &MSB);
+int Categorize( std::vector<char> &P, char &FT);
+void ParseAT( std::vector<char> &P, char SFID, char ATCMMD, char STS, char PV);
+void ParseSMS( std::vector<char> &P, char PN[], char MSSGE[] );
+//void ParseTXStatus( std::vector<char> &P, char SFID, char Address[], char TX_Retry, char DeliveryStatus, char DiscoveryStatus);
+void ParseTXStatus(std::vector<char> &P, char Address[], char SFID, char TX_Retry, char DeliveryStatus, char DiscoveryStatus);
 void Fail();
 
- const char DATA = 512;  
- const char START = '0x7e'; 
+ const int DATA = 512;  
+ const char START = 0x7e; 
  char Error_Code;
  
         //Frame Types
- const char RECIEVE_SMS = '0x9f';
- const char RECIEVE_AT = '0x88';
- const char RECIEVE_TX_STAT = '0x8B';
+ const char RECIEVE_SMS = 0x9f;
+ const char RECIEVE_AT = 0x88;
+ const char RECIEVE_TX_STAT = 0x8B;
 
         //Examine
  const int Invalid_Response = 0;
@@ -27,7 +28,7 @@ void Fail();
 const int TX_Status = 3;
 
 
-int main()
+int accessory_main_3()
 {
         //Variables for the Main Program
     char Length_MSB; 
@@ -48,7 +49,7 @@ int main()
     char DeliveryStatus;
     char DiscoveryStatus;
     
-     vector<char> RecievedData;
+     std::vector<char> RecievedData;
   
   if(Verify(RecievedData, Length_LSB, Length_MSB))  //Check START
   {
@@ -72,7 +73,7 @@ int main()
         break;
         
         case 3:  //Transmit Status
-        ParseTXStatus(RecievedData, Store_FrameID, Address, TX_Retry, DeliveryStatus, DiscoveryStatus);
+        ParseTXStatus(RecievedData, Address, Store_FrameID, TX_Retry, DeliveryStatus, DiscoveryStatus);
         break;
     }
   }
@@ -84,9 +85,9 @@ int main()
 }
 
 
-bool Verify( vector<char> &P, char &Length_LSB, char &Length_MSB)
+bool Verify( std::vector<char> &P, char &Length_LSB, char &Length_MSB)
 {
-    if(P[0] == 'START')
+    if(P[0] == START)
     {
         Length_MSB = P[1]; 
         Length_LSB  = P[2];
@@ -99,7 +100,7 @@ bool Verify( vector<char> &P, char &Length_LSB, char &Length_MSB)
     }    
 }    
 
-int Categorize( vector<char> &P, char &Store_FrameType)
+int Categorize( std::vector<char> &P, char &Store_FrameType)
 {
    Store_FrameType = P[3];
     
@@ -113,7 +114,7 @@ int Categorize( vector<char> &P, char &Store_FrameType)
 }
 
 
-void ParseAT( vector<char> &P, char SFID, char ATCMMD, char STS, char PV)
+void ParseAT( std::vector<char> &P, char SFID, char ATCMMD, char STS, char PV)
 {
     SFID = P[4] ;
     ATCMMD = P[5];
@@ -122,7 +123,7 @@ void ParseAT( vector<char> &P, char SFID, char ATCMMD, char STS, char PV)
     return;
 }
 
-void ParseSMS( vector<char> &P, char PN[], char MSSGE[] )
+void ParseSMS( std::vector<char> &P, char PN[], char MSSGE[] )
 {
     int i;
     int j;
@@ -133,7 +134,7 @@ void ParseSMS( vector<char> &P, char PN[], char MSSGE[] )
     {  MSSGE[j] = P[i];  }
 }
 
-void ParseTXStatus( vector<char> &P, char Address[], char SFID, char TX_Retry, char DeliveryStatus, char DiscoveryStatus)
+void ParseTXStatus(std::vector<char> &P, char Address[], char SFID, char TX_Retry, char DeliveryStatus, char DiscoveryStatus)
 {
     
     SFID = P[4];
@@ -147,6 +148,6 @@ void ParseTXStatus( vector<char> &P, char Address[], char SFID, char TX_Retry, c
 
 void Fail()
 {
-  cout<<"Packet Failed.  Code: "<<Error_Code<<endl;
+  std::cout<< "Packet Failed.  Code: " << Error_Code << std::endl;
   return;
 }

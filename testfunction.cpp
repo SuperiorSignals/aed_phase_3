@@ -745,7 +745,42 @@ void test_function_14()
 
 void test_function_15()
 {
+	XBeeMesh xBeeMesh;
+	SerialPort serialPort("/dev/ttymxc2", 9600);
+	MeshAtPacket meshAtPacket;
+	MeshTxPacket meshTxPacket;
 
+	std::vector<char> at_command;
+	std::vector<char> at_packet;
+	std::vector<char> tx_packet;
+	std::vector<char> tx_data;
+	std::vector<char> inputBuffer;
+	std::string s = "Hello World!";
+
+	at_command.push_back('D');
+	at_command.push_back('H');
+	meshAtPacket.setAtCommand(at_command);
+	meshAtPacket.setFrameId(0x01);
+	at_packet = meshAtPacket.getPacket();
+	std::cout << "At Packet will be sent: ";
+	displayHexadecimal(at_packet);
+	tx_data = stringToVector(s);
+	meshTxPacket.setData(tx_data);
+	meshTxPacket.setFrameId(0x01);
+	tx_packet = meshTxPacket.getPacket();
+	std::cout << "Tx Packet will be sent: ";
+	displayHexadecimal(tx_packet);
+
+	xBeeMesh.apiModeEntry();
+	serialPort.openRts();
+	serialPort.write(at_packet);
+	serialPort.timedRead(inputBuffer, 2.0);
+	displayHexadecimal(inputBuffer);
+	serialPort.write(tx_packet);
+	inputBuffer.clear();
+	serialPort.timedRead(inputBuffer, 2.0);
+	displayHexadecimal(inputBuffer);
+	xBeeMesh.apiModeExit();
 }
 
 void test_function_16()

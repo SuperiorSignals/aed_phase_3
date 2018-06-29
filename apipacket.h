@@ -220,14 +220,12 @@ public:
 	std::vector<char> getPacket();
 
 	std::vector<char> getAtCommand();
-	char getBroadcastRadius();
 	std::vector<char> getDestinationAddress();
 	char getFrameId();
 	int getLength();
 	std::vector<char> getParameter();
 	
 	void setAtCommand(std::vector<char> input);
-	void setBroadcastRadius(char input);
 	void setDestinationAddress(std::vector<char> input);
 	void setFrameId(char input);
 	void setLength(int input);
@@ -245,7 +243,6 @@ private:
 	std::vector<char> parameter;
 	//TX Request Variables
 	std::vector<char> destinationAddress;
-	char broadcastRadius;
 	char lengthMsb;
 	char lengthLsb;
 

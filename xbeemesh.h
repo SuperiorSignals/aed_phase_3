@@ -17,6 +17,8 @@ private:
 	bool isPaused;
 public:
 	XBeeMesh();
+	void apiModeEntry();
+	void apiModeExit();
 	bool getIsPaused();
 	std::vector<char> getData(double duration);
 	std::string getDestinationHigh();

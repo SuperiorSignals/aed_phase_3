@@ -16,6 +16,16 @@ XBeeMesh::XBeeMesh()
 	openPortRts("/dev/ttymxc2", 9600);
 }
 
+void XBeeMesh::apiModeEntry()
+{
+	enterApiMode();
+}
+
+void XBeeMesh::apiModeExit()
+{
+	exitApiMode();
+}
+
 bool XBeeMesh::getIsPaused()
 {
 	return isPaused;

@@ -610,7 +610,18 @@ int MeshRxPacket::getLength()
 //  Assembly For TX and AT For XBEE
 MeshTxPacket::MeshTxPacket()
 {
+	broadcastRadius = 0x00;
 	transmitOptions = 0x01;
+	for (int i = 0; i < 6; i++) {
+		destinationAddress.push_back(0x00);
+	}
+	destinationAddress.push_back(0xFF);
+	destinationAddress.push_back(0xFF);
+	if (destinationAddress.size() != 8) {
+		std::cout << "Error [MeshTxPacket::MeshTxPacket()]: ";
+		std::cout << "destination address size " << destinationAddress.size();
+		std::cout << std::endl;
+	}
 }
 
 
@@ -693,7 +704,6 @@ void MeshTxPacket::assembleTxRequest()
 }
 
 std::vector<char> MeshAtPacket::getAtCommand() { return atCommand; }
-char MeshAtPacket::getBroadcastRadius() { return broadcastRadius; }
 std::vector<char> MeshAtPacket::getDestinationAddress() { return destinationAddress; }
 char MeshAtPacket::getFrameId() { return frameId; }
 int MeshAtPacket::getLength()
@@ -714,7 +724,6 @@ int MeshAtPacket::calculatePreLength()
 }
 
 void MeshAtPacket::setAtCommand(std::vector<char> input) { atCommand = input; }
-void MeshAtPacket::setBroadcastRadius(char input) { broadcastRadius = input; }
 void MeshAtPacket::setDestinationAddress(std::vector<char> input) { destinationAddress = input; }
 void MeshAtPacket::setFrameId(char input) { frameId = input; }
 void MeshAtPacket::setLength(int input)
@@ -740,7 +749,9 @@ void MeshAtPacket::assembleAt()
 	int length;
 
 	packet.insert(packet.end(), atCommand.begin(), atCommand.end());
-	packet.insert(packet.end(), parameter.begin(), parameter.end());
+	if (parameter.size() > 0) {
+		packet.insert(packet.end(), parameter.begin(), parameter.end());
+	}
 	length = calculatePreLength();
 	setLength(length);
 	packet[1] = lengthMsb;
