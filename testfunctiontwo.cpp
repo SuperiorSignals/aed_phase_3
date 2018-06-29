@@ -1748,6 +1748,146 @@ void test_function_41()
 		std::cout << "Empty buffer." << std::endl;
 	}
 }
+
+
+void test_function_42()
+{
+	//Configuration configuration;
+	DataPacket dataPacket;
+	GpsModule gpsModule(GPSMODULE_PORT, GPSMODULE_RATE);
+	GpsData gpsData;
+	XBeeCell xBeeCell(XBEECELL_PORT, XBEECELL_RATE);
+	XBeeMesh xBeeMesh;
+	std::vector<char> packet;
+	std::vector<char> networkMessage;
+	std::string textMessage;
+	time_t startTime, endTime;
+	time_t currentTime;
+	bool eventTriggered;
+	bool isCellConnected;
+	bool isGpsValid;
+
+	isCellConnected = false;
+	isGpsValid = false;
+	gpio_set();
+	eventTriggered = false;
+	configuration.loadConfiguration();
+	//xBeeMesh.pauseMesh();
+	time(&lastReportTime);
+	while (1) {
+		gpsData.parseGpsData(gpsModule.getData());
+		isGpsValid = gpsData.getValidity();
+		time(&currentTime);
+		if (difftime(currentTime, lastReportTime) > STANDARD_PACKET_TIME) {
+			dataPacket.setGpsData(gpsData);
+			packet = dataPacket.getPacket(NORMAL, configuration);
+			//displayHexadecimal(packet);
+			if (xBeeCell.getConnection() == 0) {
+				isCellConnected = true;
+				xBeeCell.dispatchUdpAt(packet);
+				packet = packetStorage.popPacket(EVENT);
+				if (packet.size() > 0) {
+					xBeeCell.dispatchUdpAt(packet);
+				} else {
+					packet = packetStorage.popPacket(NORMAL);
+					if (packet.size() > 0) {
+						xBeeCell.dispatchUdpAt(packet);
+					}
+				}
+			} else {
+				isCellConnected = false;
+				packetStorage.pushPacket(packet, NORMAL);
+				xBeeMesh.sendData(packet);
+				/*
+				if (xBeeMesh.getIsPaused() == true) {
+				xBeeMesh.unpauseMesh();
+				xBeeMesh.sendData(packet);
+				xBeeMesh.pauseMesh();
+				} else {
+				xBeeMesh.sendData(packet);
+				}
+				*/
+
+			}
+			time(&lastReportTime);
+			report_shared(gpsData);
+		}
+		textMessage = xBeeCell.getText();
+		if (difftime(currentTime, lastReportTime) > EVENT_PACKET_WAIT_TIME) {
+			eventTriggered = checkEvents(configuration);
+			if (eventTriggered) {
+				dataPacket.setGpsData(gpsData);
+				packet = dataPacket.getPacket(EVENT, configuration);
+				if (xBeeCell.getConnection() == 0) {
+					isCellConnected = true;
+					xBeeCell.dispatchUdpAt(packet);
+					if (packet.size() > 0) {
+						xBeeCell.dispatchUdpAt(packet);
+					}
+				} else {
+					isCellConnected = false;
+					packetStorage.pushPacket(packet, EVENT);
+				}
+			}
+		}
+		indicators(isGpsValid, isCellConnected);
+		if (textMessage.size() > 0) {
+			std::cout << "Text Message: " << textMessage;
+			std::cout << std::endl;
+			configuration.parseConfiguration(textMessage);
+		}
+		xBeeMesh.unpauseMesh();
+		networkMessage = xBeeMesh.receiveData(MESH_LISTEN_TIME);
+		xBeeMesh.pauseMesh();
+	}
+}
+
+
+
+void test_function_43()
+{
+	XBeeMesh xBeeMesh;
+	SerialPort serialPort("/dev/ttymxc2", 9600);
+	MeshAtPacket meshAtPacket;
+	MeshTxPacket meshTxPacket;
+
+	std::vector<char> at_command;
+	std::vector<char> at_packet;
+	std::vector<char> tx_packet;
+	std::vector<char> tx_data;
+	std::vector<char> inputBuffer;
+	std::string s = "Hello World!";
+
+	at_command.push_back('D');
+	at_command.push_back('H');
+	meshAtPacket.setAtCommand(at_command);
+	meshAtPacket.setFrameId(0x01);
+	at_packet = meshAtPacket.getPacket();
+	std::cout << "At Packet will be sent: ";
+	displayHexadecimal(at_packet);
+	tx_data = stringToVector(s);
+	meshTxPacket.setData(tx_data);
+	meshTxPacket.setFrameId(0x01);
+	tx_packet = meshTxPacket.getPacket();
+	std::cout << "Tx Packet will be sent: ";
+	displayHexadecimal(tx_packet);
+
+	xBeeMesh.apiModeEntry();
+	serialPort.openRts();
+	serialPort.write(at_packet);
+	serialPort.timedRead(inputBuffer, 2.0);
+	displayHexadecimal(inputBuffer);
+	serialPort.write(tx_packet);
+	inputBuffer.clear();
+	serialPort.timedRead(inputBuffer, 2.0);
+	displayHexadecimal(inputBuffer);
+	xBeeMesh.apiModeExit();
+}
+
+
+
+
+
 void test_function_42() { }
 void test_function_43() { }
 void test_function_44() { }
