@@ -652,14 +652,14 @@ void MeshTxPacket::setDestinationAddress(std::vector<char> input) { destinationA
 void MeshTxPacket::setFrameId(char input) { frameId = input; }
 void MeshTxPacket::setLength(int input)
 {
-	lengthMsb = input & 0x00F0;
-	lengthLsb = input & 0x000F;
+	lengthMsb = input & 0xFF00;
+	lengthLsb = input & 0x00FF;
 }
 void MeshTxPacket::setData(std::vector<char> input) { data = input; }
 
 std::vector<char> MeshTxPacket::getPacket()
 {
-
+	packet.clear();
 	assemblePrePacket();
 	assembleTxRequest();
 
@@ -668,6 +668,7 @@ std::vector<char> MeshTxPacket::getPacket()
 
 std::vector<char> MeshAtPacket::getPacket()
 {
+	packet.clear();
 	assemblePrePacket();
 	assembleAt();
 
@@ -728,8 +729,8 @@ void MeshAtPacket::setDestinationAddress(std::vector<char> input) { destinationA
 void MeshAtPacket::setFrameId(char input) { frameId = input; }
 void MeshAtPacket::setLength(int input)
 {
-	lengthMsb = input & 0x00F0;
-	lengthLsb = input & 0x000F;
+	lengthMsb = input & 0xFF00;
+	lengthLsb = input & 0x00FF;
 }
 void MeshAtPacket::setParameter(std::vector<char> input) { parameter = input; }
 

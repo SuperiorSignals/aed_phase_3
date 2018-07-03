@@ -76,8 +76,8 @@ void gpio_set()
 	GpioPin gpsSysOn;
 	GpioPin gpsOn;
 	GpioPin cellOn;
-	GpioPin meshOn;
-	GpioPin meshRst;
+	//GpioPin meshOn;
+	//GpioPin meshRst;
 
 	gpsPower.setLinuxKernelNumber(89);
 	gpsPower.write(GPIO_PIN_OUTPUT_HIGH);
@@ -87,10 +87,10 @@ void gpio_set()
 	gpsOn.write(GPIO_PIN_OUTPUT_HIGH);
 	cellOn.setLinuxKernelNumber(3);
 	cellOn.write(GPIO_PIN_OUTPUT_HIGH);
-	meshOn.setLinuxKernelNumber(43);
-	meshOn.write(GPIO_PIN_OUTPUT_HIGH);
-	meshRst.setLinuxKernelNumber(45);
-	meshRst.write(GPIO_PIN_OUTPUT_LOW);
+	//meshOn.setLinuxKernelNumber(43);
+	//meshOn.write(GPIO_PIN_OUTPUT_HIGH);
+	//meshRst.setLinuxKernelNumber(45);
+	//meshRst.write(GPIO_PIN_OUTPUT_LOW);
 }
 
 unsigned char gpio_test()
@@ -697,7 +697,6 @@ void test_function_13()
 				xBeeMesh.sendData(packet);
 				}
 				*/
-
 			}
 			time(&lastReportTime);
 			report_shared(gpsData);
@@ -771,6 +770,7 @@ void test_function_15()
 	std::cout << "Tx Packet will be sent: ";
 	displayHexadecimal(tx_packet);
 
+	xBeeMesh.unpauseMesh();
 	xBeeMesh.apiModeEntry();
 	serialPort.openRts();
 	serialPort.write(at_packet);

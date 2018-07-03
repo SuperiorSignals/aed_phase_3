@@ -61,7 +61,7 @@ void test_function_40(); // Test standard routine on SBC Pro
 */
 void test_function_41();
 void test_function_42();
-void test_function_43();
+void test_function_43(std::vector<char> input);
 void test_function_44();
 void test_function_45();
 void test_function_46();
