@@ -37,7 +37,6 @@ void test_function_19(); // Test generation of API AT packets
 void test_function_20(); // Test address and port settings
 void test_function_21(); // Run arbitrary AT command by API
 
-void test_function_21(); // Test Micropython
 void test_function_22(); // Test API
 void test_function_23(); // Test XBee class
 void test_function_24(); // Determine true clock ticks per second
@@ -59,13 +58,13 @@ void test_function_38(); // Test duplicate removal
 void test_function_39(); // Test ADC
 void test_function_40(); // Test standard routine on SBC Pro
 */
-void test_function_41();
-void test_function_42();
-void test_function_43(std::vector<char> input);
-void test_function_44();
-void test_function_45();
-void test_function_46();
-void test_function_47();
+void test_function_41(); // Test Micropython
+void test_function_42(); // Mesh externalized to test_function_43
+void test_function_43(std::vector<char> input); // Mesh packet transmit function
+void test_function_44(); // Standard routine variant
+void test_function_45(); // Standard routine variant
+void test_function_46(); // Functional mesh, standard routine
+void test_function_47(); // Test transmit status
 void test_function_48();
 void test_function_49();
 void test_function_50();

@@ -36,8 +36,6 @@ void test_function_19(); // Test generation of API AT packets
 void test_function_20(); // Test address and port settings
 void test_function_21(); // Run arbitrary AT command by API
 
-
-void test_function_21(); // Test Micropython
 void test_function_22(); // Test API
 void test_function_23(); // Test XBee class
 void test_function_24(); // Determine true clock ticks per second

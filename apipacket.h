@@ -88,7 +88,7 @@ private:
 
 // Author: Dane Rodriguez
 
-enum RxPacketType { INVALID_RESPONSE, AT_RESPONSE, SMS_RESPONSE };
+enum RxPacketType { INVALID_RESPONSE, AT_RESPONSE, SMS_RESPONSE, TX_RESPONSE };
 
 class CellRxPacket {
 public:
@@ -138,6 +138,7 @@ private:
 class MeshRxPacket {
 public:
 	MeshRxPacket(std::vector<char> initial);
+	RxPacketType categorize();
 	std::vector<char> getAddress();
 	int getLength();
 	std::vector<char> getPacket();
@@ -147,14 +148,20 @@ public:
 	void parseRxPacket();
 	bool verify();
 
+	char getTransmitRetryCount(); // Specific to Tx status packet
+	char getDeliveryStatus(); // Specific to Tx status packet
+	char getDiscoveryStatus(); // Specific to Tx status packet
+
 private:
 	const char START_DEL = 0x7E;
 	const int DATA_SIZE = 512;
 	//Frame Types
 	const char RX_FRAME_TYPE = 0x90;
+	const char RECEIVE_AT = 0x88;
+	const char RECEIVE_TXSTATUS = 0x8B;
 	const char RESERVED_MSB = 0xFF;
 	const char RESERVED_LSB = 0xFE;
-
+	char frameType;
 	std::vector<char> packetData;
 	char lengthMsb;
 	char lengthLsb;
@@ -164,8 +171,6 @@ private:
 	std::vector<char> packet;
 
 	bool validateChecksum();
-
-
 };
 
 class MeshTxPacket {
@@ -179,7 +184,6 @@ public:
 	char getFrameId();
 	int getLength();
 	std::vector<char> getData();
-
 
 	void setAtCommand(std::vector<char> input);
 	void setBroadcastRadius(char input);

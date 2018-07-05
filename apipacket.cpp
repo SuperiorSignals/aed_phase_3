@@ -513,6 +513,20 @@ MeshRxPacket::MeshRxPacket(std::vector<char> initial)
 	parseRxPacket();
 }
 
+RxPacketType MeshRxPacket::categorize()
+{
+	frameType = packet[3];
+
+	if (frameType == RECEIVE_AT) {
+		return AT_RESPONSE;
+	}
+	if (frameType == RECEIVE_TXSTATUS) {
+		return TX_RESPONSE;
+	}
+
+	return INVALID_RESPONSE;
+}
+
 std::vector<char> MeshRxPacket::getAddress() { return address; }
 std::vector<char> MeshRxPacket::getData() { return data; }
 std::vector<char> MeshRxPacket::getPacket() { return packet; }
@@ -531,27 +545,27 @@ bool MeshRxPacket::verify()
 	if (packet[0] == START_DEL) {
 		if (packet[3] == RX_FRAME_TYPE) {
 			length = packet[1];
-			length = length << 8;
-			length += packet[2];
-			if (length == this->getLength()) {
-				if (this->validateChecksum()) {
-					return true;
-				} else {
-					std::cout << "ERROR [bool CellRxPacket::verify()]: ";
-					std::cout << "invalid checksum" << std::endl;
-				}
-			} else {
-				std::cout << "ERROR [bool CellRxPacket::verify()]: ";
-				std::cout << "invalid length " << length;
-				std::cout << " vs. " << this->getLength() << std::endl;
-			}
-		} else {
-			std::cout << "WARNING [bool MeshRxPacket::verify()]: ";
-			std::cout <<"wrong packet type" << std::endl;
-		}
+length = length << 8;
+length += packet[2];
+if (length == this->getLength()) {
+	if (this->validateChecksum()) {
+		return true;
 	} else {
 		std::cout << "ERROR [bool CellRxPacket::verify()]: ";
-		std::cout << "invalid start delimiter" << std::endl;
+		std::cout << "invalid checksum" << std::endl;
+	}
+} else {
+	std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+	std::cout << "invalid length " << length;
+	std::cout << " vs. " << this->getLength() << std::endl;
+}
+		} else {
+		std::cout << "WARNING [bool MeshRxPacket::verify()]: ";
+		std::cout << "wrong packet type" << std::endl;
+		}
+	} else {
+	std::cout << "ERROR [bool CellRxPacket::verify()]: ";
+	std::cout << "invalid start delimiter" << std::endl;
 	}
 
 	return false;
@@ -585,7 +599,7 @@ bool MeshRxPacket::validateChecksum()
 	unsigned int temporary;
 
 	temporary = 0;
-	if (packet.size()  > 3) {
+	if (packet.size() > 3) {
 		for (int i = 3; i < packet.size(); i++) {
 			temporary += packet[i];
 		}
@@ -605,6 +619,54 @@ int MeshRxPacket::getLength()
 	output = packet.size() - 4;
 
 	return output;
+}
+
+char MeshRxPacket::getTransmitRetryCount()
+{
+	if (categorize() == TX_RESPONSE) {
+		if (data.size() > 6) {
+			return data[4];
+		}
+		std::cout << "Error [char MeshRxPacket::getTransmitRetryCount()]: Data size too small.";
+		std::cout << std::endl;
+	} else {
+		std::cout << "Error [char MeshRxPacket::getTransmitRetryCount()]: Packet type is not TX_STATUS.";
+		std::cout << std::endl;
+	}
+
+	return 0;
+}
+
+char MeshRxPacket::getDeliveryStatus()
+{
+	if (categorize() == TX_RESPONSE) {
+		if (data.size() > 6) {
+			return data[5];
+		}
+		std::cout << "Error [char MeshRxPacket::getDeliveryStatus()]: Data size too small.";
+		std::cout << std::endl;
+	} else {
+		std::cout << "Error [char MeshRxPacket::getDeliveryStatus()]: Packet type is not TX_STATUS.";
+		std::cout << std::endl;
+	}
+
+	return 0;
+}
+
+char MeshRxPacket::getDiscoveryStatus()
+{
+	if (categorize() == TX_RESPONSE) {
+		if (data.size() > 6) {
+			return data[6];
+		}
+		std::cout << "Error [char MeshRxPacket::getDiscoveryStatus()]: Data size too small.";
+		std::cout << std::endl;
+	} else {
+		std::cout << "Error [char MeshRxPacket::getDiscoveryStatus()]: Packet type is not TX_STATUS.";
+		std::cout << std::endl;
+	}
+
+	return 0;
 }
 
 //  Assembly For TX and AT For XBEE
@@ -684,7 +746,6 @@ void MeshTxPacket::assemblePrePacket()
 	packet.push_back(frameId);
 }
 
-
 void MeshTxPacket::assembleTxRequest()
 {
 	char c;
@@ -727,13 +788,14 @@ int MeshAtPacket::calculatePreLength()
 void MeshAtPacket::setAtCommand(std::vector<char> input) { atCommand = input; }
 void MeshAtPacket::setDestinationAddress(std::vector<char> input) { destinationAddress = input; }
 void MeshAtPacket::setFrameId(char input) { frameId = input; }
+
 void MeshAtPacket::setLength(int input)
 {
 	lengthMsb = input & 0xFF00;
 	lengthLsb = input & 0x00FF;
 }
-void MeshAtPacket::setParameter(std::vector<char> input) { parameter = input; }
 
+void MeshAtPacket::setParameter(std::vector<char> input) { parameter = input; }
 
 void MeshAtPacket::assemblePrePacket()
 {

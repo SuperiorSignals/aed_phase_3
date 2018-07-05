@@ -1193,8 +1193,7 @@ void test_function_27()
 		convertVectorToArray(inputBuffer, buffer);
 		displayBuffer(buffer, stringLength);
 		displayHexadecimal(buffer, stringLength);
-	}
-	else {
+	} else {
 		std::cout << "Empty buffer." << std::endl;
 	}
 }

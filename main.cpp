@@ -40,6 +40,7 @@ Configuration configuration;
 PacketStorage packetStorage;
 time_t mainStartTime;
 time_t lastReportTime;
+time_t lastStoredPopTime;
 
 int main(int argc, char *argv[])
 {

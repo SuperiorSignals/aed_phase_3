@@ -23,7 +23,8 @@ extern "C" {
 #include "gpio_interface.h"
 }
 
-#define STANDARD_PACKET_TIME 150
+#define STANDARD_PACKET_TIME 600
+#define STORED_PACKET_TIME 750
 #define EVENT_PACKET_WAIT_TIME 60
 #define MESH_LISTEN_TIME 5.0
 #define SERVER_ADDRESS "135.26.235.158"
@@ -39,6 +40,7 @@ extern Configuration configuration;
 extern PacketStorage packetStorage;
 extern time_t mainStartTime;
 extern time_t lastReportTime;
+extern time_t lastStoredPopTime;
 //extern double EMPIRICAL_CLOCK_ADJUSTMENT;
 //extern double clock_adjustment;
 
@@ -2016,7 +2018,7 @@ void test_function_45()
 				isCellConnected = false;
 				packetStorage.pushPacket(packet, NORMAL);
 				if (xBeeMesh.getIsPaused() == true) {
-					xBeeMesh.unpauseMesh();
+					//xBeeMesh.unpauseMesh();
 					{
 						meshTxPacket.setData(packet);
 						meshTxPacket.setFrameId(0x01);
@@ -2031,7 +2033,7 @@ void test_function_45()
 						displayHexadecimal(inputBuffer);
 						xBeeMesh.apiModeExit();
 					}
-					xBeeMesh.pauseMesh();
+					//xBeeMesh.pauseMesh();
 				} else {
 					{
 						meshTxPacket.setData(packet);
@@ -2076,9 +2078,9 @@ void test_function_45()
 			std::cout << std::endl;
 			configuration.parseConfiguration(textMessage);
 		}
-		xBeeMesh.unpauseMesh();
+		//xBeeMesh.unpauseMesh();
 		networkMessage = xBeeMesh.receiveData(MESH_LISTEN_TIME);
-		xBeeMesh.pauseMesh();
+		//xBeeMesh.pauseMesh();
 	}
 }
 
@@ -2103,12 +2105,13 @@ void test_function_46()
 	std::vector<char> inputBuffer;
 
 	gpio_set();
-	xBeeMesh.unpauseMesh();
+	xBeeMesh.pauseMesh();
 	time(&lastReportTime);
 	while (1) {
 		gpsData.parseGpsData(gpsModule.getData());
 		time(&currentTime);
 		if (difftime(currentTime, lastReportTime) > STANDARD_PACKET_TIME) {
+			// Send out normal packet
 			dataPacket.setGpsData(gpsData);
 			packet = dataPacket.getPacket(NORMAL, configuration);
 			if (xBeeCell.getConnection() == 0) {
@@ -2116,6 +2119,7 @@ void test_function_46()
 				std::cout << std::endl;
 				xBeeCell.dispatchUdpAt(packet);
 			} else {
+				xBeeMesh.unpauseMesh();
 				meshTxPacket.setData(packet);
 				meshTxPacket.setFrameId(0x01);
 				packet = meshTxPacket.getPacket();
@@ -2128,14 +2132,56 @@ void test_function_46()
 				serialPort.timedRead(inputBuffer, 2.0);
 				displayHexadecimal(inputBuffer);
 				xBeeMesh.apiModeExit();
+				xBeeMesh.pauseMesh();
 			}
 			time(&lastReportTime);
+		} else if (difftime(currentTime, lastStoredPopTime) > STORED_PACKET_TIME) {
+			// Deal with stored packets
+			if (xBeeCell.getConnection() == 0) {
+				packet = packetStorage.popPacket(EVENT);
+				if (packet.size() > 0) {
+					xBeeCell.dispatchUdpAt(packet);
+				} else {
+					packet = packetStorage.popPacket(NORMAL);
+					if (packet.size() > 0) {
+						xBeeCell.dispatchUdpAt(packet);
+					}
+				}
+			}
+			time(&lastStoredPopTime);
 		}
+		xBeeMesh.unpauseMesh();
 		inputBuffer = xBeeMesh.receiveData(MESH_LISTEN_TIME);
+		xBeeMesh.pauseMesh();
 	}
 }
 
-void test_function_47() { }
+void test_function_47()
+{
+	XBeeMesh xBeeMesh;
+	std::vector<char> packet;
+	std::vector<char> tx_data;
+	std::string textMessage;
+	SerialPort serialPort("/dev/ttymxc2", 9600);
+	MeshTxPacket meshTxPacket;
+	std::vector<char> inputBuffer;
+	std::string output;
+
+	output = "test_function_47()";
+	packet = stringToVector(output);
+	meshTxPacket.setData(packet);
+	meshTxPacket.setFrameId(0x01);
+	packet = meshTxPacket.getPacket();
+	std::cout << "Mesh tx packet will be sent: ";
+	displayHexadecimal(packet);
+	xBeeMesh.apiModeEntry();
+	serialPort.openRts();
+	serialPort.write(packet);
+	inputBuffer.clear();
+	serialPort.timedRead(inputBuffer, 2.0);
+	displayHexadecimal(inputBuffer);
+	xBeeMesh.apiModeExit();
+}
 void test_function_48() { }
 void test_function_49() { }
 void test_function_50() { }
