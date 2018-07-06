@@ -7,6 +7,7 @@
 bool comparePacket(char *buffer, int indices[4]);
 bool comparePacket(std::vector<char> first, std::vector<char> second);
 void removeDuplicate(char *buffer, std::vector<long>& indices, std::vector<std::string>& index, int duplicates[2]);
+bool verifyQueuedPacket(std::vector<char> input);
 
 class PacketStorage {
 public:
@@ -16,12 +17,16 @@ public:
 	void resetPacketStorage(PacketType type);
 	//std::vector<char> retrievePacket(int index, PacketType type);
 	//void storePacket(std::vector<char> input, PacketType type);
+	void transferQueuedPackets();
 
 private:
 	std::vector<char> packetPopper(const char *indexInput, const char *dataInput);
 	void packetPusher(std::vector<char> input, const char *indexInput, const char *dataInput);
 	void removeMeshDuplicates();
+	void removeQueuedDuplicates();
+	void consolidateQueuedPackets();
 	void resetStorage(const char *indexInput, const char *dataInput);
+
 };
 
 

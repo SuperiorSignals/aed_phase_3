@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+#define PACKET_SENT 0x1C
+#define PACKET_UNSENT 0x35
+
 /*
 int PacketStorage::getPacketCount(PacketType type)
 {
@@ -21,7 +24,7 @@ int PacketStorage::getPacketCount(PacketType type)
 			std::cout << "ERROR [int PacketStorage::getPacketCount(PacketType)]: ";
 			std::cout << "Unable to open file C:/opt/chainlink/normalpacketindex.txt";
 			std::cout << std::endl;
-			break;	
+			break;
 		}
 		while (!indexFile.eof()) {
 			std::getline(indexFile, temporary);
@@ -74,6 +77,47 @@ int PacketStorage::getPacketCount(PacketType type)
 }
 */
 
+void PacketStorage::consolidateQueuedPackets()
+{
+	std::vector<std::vector<char>> packets;
+	std::vector<char> comparator;
+	std::vector<char> temporary;
+	char compSentStatus;
+	char tempSentStatus;
+	bool compUnsentTempSent;
+
+	do {
+		temporary = popPacket(QUEUED);
+		if (temporary.size() > 0) {
+			packets.push_back(temporary);
+		}
+	} while (temporary.size() > 0);
+
+	for (int i = 0; i < packets.size(); i++) {
+		compUnsentTempSent = false;
+		comparator = packets[i];
+		compSentStatus = comparator[0];
+		comparator.erase(comparator.begin());
+		for (int j = i + 1; j < packets.size(); j++) {
+			temporary = packets[j];
+			tempSentStatus = temporary[0];
+			temporary.erase(temporary.begin());
+			if (comparator == temporary) {
+				if (compSentStatus == PACKET_SENT) {
+					packets.erase(packets.begin() + j);
+				} else if (tempSentStatus == PACKET_SENT) {
+					compUnsentTempSent = true;
+				} else {
+					packets.erase(packets.begin() + j);
+				}
+			}
+		}
+		if (compUnsentTempSent) {
+			packets.erase(packets.begin() + i);
+		}
+	}
+}
+
 std::vector<char> PacketStorage::popPacket(PacketType type)
 {
 	std::vector<char> output;
@@ -89,6 +133,9 @@ std::vector<char> PacketStorage::popPacket(PacketType type)
 	case MESH:
 		output = packetPopper("meshpacketindex.txt", "meshpacketdata.txt");
 		break;
+	case QUEUED:
+		output = packetPopper("queuedpacketindex.txt", "queuedpacketdata.txt");
+		break;
 	default:
 		break;
 }
@@ -102,6 +149,9 @@ std::vector<char> PacketStorage::popPacket(PacketType type)
 		break;
 	case MESH:
 		output = packetPopper("/opt/chainlink/meshpacketindex.txt", "/opt/chainlink/meshpacketdata.txt");
+		break;
+	case QUEUED:
+		output = packetPopper("/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketdata.txt");
 		break;
 	default:
 		break;
@@ -125,6 +175,9 @@ void PacketStorage::pushPacket(std::vector<char> input, PacketType type)
 		packetPusher(input, "meshpacketindex.txt", "meshpacketdata.txt");
 		//removeMeshDuplicates();
 		break;
+	case QUEUED:
+		packetPusher(input, "queuedpacketindex.txt", "queuedpacketindex.txt");
+		break;
 	default:
 		break;
 	}
@@ -139,6 +192,10 @@ void PacketStorage::pushPacket(std::vector<char> input, PacketType type)
 	case MESH:
 		packetPusher(input, "/opt/chainlink/meshpacketindex.txt", "/opt/chainlink/meshpacketdata.txt");
 		removeMeshDuplicates();
+		break;
+	case QUEUED:
+		packetPusher(input, "/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketdata.txt");
+		removeQueuedDuplicates();
 		break;
 	default:
 		break;
@@ -160,6 +217,8 @@ std::vector<char> PacketStorage::retrievePacket(int index, PacketType type)
 		break;
 	case MESH:
 		break;
+	case QUEUED:
+		break;
 	default:
 		break;
 	}
@@ -175,6 +234,8 @@ void PacketStorage::storePacket(std::vector<char> input, PacketType type)
 	case EVENT:
 		break;
 	case MESH:
+		break;
+	case QUEUED:
 		break;
 	default:
 		break;
@@ -195,6 +256,9 @@ void PacketStorage::resetPacketStorage(PacketType type)
 	case MESH:
 		resetStorage("meshpacketindex.txt", "meshpacketdata.txt");
 		break;
+	case QUEUED:
+		resetStorage("queuedpacketindex.txt", "queuedpacketindex.txt");
+		break;
 	default:
 		break;
 	}
@@ -209,6 +273,8 @@ void PacketStorage::resetPacketStorage(PacketType type)
 	case MESH:
 		resetStorage("/opt/chainlink/meshpacketindex.txt", "/opt/chainlink/meshpacketdata.txt");
 		break;
+	case QUEUED:
+		resetStorage("/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketindex.txt");
 	default:
 		break;
 	}
@@ -512,7 +578,7 @@ void PacketStorage::removeMeshDuplicates()
 
 	indexFile.open(indexInput, std::ios::out | std::ios::trunc);
 	if (!indexFile.is_open()) {
-		std::cout << "ERROR [int PacketStorage::pushPacket(PacketType)]: ";
+		std::cout << "ERROR [int PacketStorage::removeMeshDuplicates()]: ";
 		std::cout << "Unable to open file " << indexInput;
 		std::cout << std::endl;
 		return;
@@ -523,7 +589,117 @@ void PacketStorage::removeMeshDuplicates()
 	indexFile.close();
 	dataFile.open(dataInput, std::ios::out | std::ios::trunc | std::ios::binary);
 	if (!dataFile.is_open()) {
-		std::cout << "ERROR [int PacketStorage::pushPacket(PacketType)]: ";
+		std::cout << "ERROR [int PacketStorage::removeMeshDuplicates()]: ";
+		std::cout << "Unable to open file " << dataInput;
+		std::cout << std::endl;
+		return; // Handle error here!
+	}
+	if (index.size() > 0) {
+		fileSize = std::stoi(index[1]) - std::stoi(index[index.size() - 2]) + 1;
+	} else {
+		fileSize = 0;
+	}
+
+	dataFile.write(dataMemoryAlloc, fileSize);
+	dataFile.close();
+
+	delete[] dataMemoryAlloc;
+}
+
+void PacketStorage::removeQueuedDuplicates()
+{
+#ifdef WINDOWS_IMPLEMENTATION
+	const char *indexInput = "queuedpacketindex.txt";
+	const char *dataInput = "queuedpacketdata.txt";
+#else
+	const char *indexInput = "/opt/chainlink/queuedpacketindex.txt";
+	const char *dataInput = "/opt/chainlink/queuedpacketdata.txt";
+#endif // WINDOWS_IMPLEMENTATION
+	char *bufferMemoryAlloc;
+	char *dataMemoryAlloc;
+	std::fstream indexFile;
+	std::fstream dataFile;
+	std::vector<char> output;
+	std::vector<long> indices;
+	std::vector<std::string> index;
+	std::string temporary;
+	std::string::size_type sz;
+	long startAddress;
+	long endAddress;
+	long size;
+	long fileSize;
+	int currentIndex[4];
+	int duplicate[2];
+	bool duplicatePresent;
+
+	indexFile.open(indexInput, std::ios::in);
+	if (!indexFile.is_open()) {
+		std::cout << "ERROR [void PacketStorage::removeQueuedDuplicates()]: ";
+		std::cout << "Unable to open file " << indexInput;
+		std::cout << std::endl;
+		return; // Unable to open file.
+	}
+	while (std::getline(indexFile, temporary)) {
+		if (temporary.size() > 0) {
+			index.push_back(temporary);
+			indices.push_back(std::stol(temporary, &sz));
+		}
+	}
+	indexFile.close();
+	size = index.size();
+	dataFile.open(dataInput, std::ios::in | std::ios::binary);
+	if (!dataFile.is_open()) {
+		std::cout << "ERROR [void PacketStorage::removeQueuedDuplicates()]: ";
+		std::cout << "Unable to open file " << dataInput;
+		std::cout << std::endl;
+		return; // Unable to open file.
+	}
+	dataFile.seekg(0, std::ios::end);
+	fileSize = dataFile.tellg();
+	dataFile.seekg(0, std::ios::beg);
+	dataMemoryAlloc = new char[fileSize];
+	dataFile.read(dataMemoryAlloc, fileSize);
+	dataFile.close();
+	if (index.size() < 3) { // Ignore if only one packet
+		return;
+	}
+	duplicatePresent = false;
+	do {
+		if (duplicatePresent) {
+			removeDuplicate(dataMemoryAlloc, indices, index, duplicate);
+			duplicatePresent = false;
+		}
+		for (int i = 0; i < indices.size() - 2; i += 2) {
+			for (int j = i + 2; j < indices.size(); j += 2) {
+				if (!duplicatePresent) {
+					currentIndex[0] = indices[i];
+					currentIndex[1] = indices[i + 1];
+					currentIndex[2] = indices[j];
+					currentIndex[3] = indices[j + 1];
+					if (comparePacket(dataMemoryAlloc, currentIndex)) {
+						duplicatePresent = true;
+						duplicate[0] = currentIndex[2];
+						duplicate[1] = currentIndex[3];
+					}
+				}
+			}
+		}
+	} while (duplicatePresent == true);
+
+	indexFile.open(indexInput, std::ios::out | std::ios::trunc);
+	if (!indexFile.is_open()) {
+		std::cout << "ERROR [int PacketStorage::removeQueuedDuplicates()]: ";
+		std::cout << "Unable to open file " << indexInput;
+		std::cout << std::endl;
+		return;
+	}
+	for (int i = 0; i < index.size(); i++) {
+		indexFile << index[i] << std::endl;
+	}
+	indexFile.close();
+	dataFile.open(dataInput, std::ios::out | std::ios::trunc | std::ios::binary);
+	if (!dataFile.is_open()) {
+		std::cout << "ERROR [int PacketStorage::removeQueuedDuplicates()]: ";
 		std::cout << "Unable to open file " << dataInput;
 		std::cout << std::endl;
 		return; // Handle error here!
@@ -559,6 +735,19 @@ void PacketStorage::resetStorage(const char *indexInput, const char *dataInput)
 		std::cout << std::endl;
 	}
 	dataFile.close();
+}
+
+void PacketStorage::transferQueuedPackets()
+{
+	std::vector<char> packet;
+
+	consolidateQueuedPackets();
+	do {
+		packet = popPacket(QUEUED);
+		if (packet.size() > 0) {
+			pushPacket(packet, MESH);
+		}
+	} while (packet.size() > 0);
 }
 
 bool comparePacket(char *buffer, int indices[4])
@@ -675,4 +864,29 @@ void removeDuplicate(char *buffer, std::vector<long>& indices, std::vector<std::
 	}
 
 	delete[] temporary;
+}
+
+bool verifyQueuedPacket(std::vector<char> input)
+{
+	std::vector<char> temporary;
+	char sentByte;
+	unsigned char checksum;
+	unsigned char checkbyte;
+
+	// Verify first byte is sent/unsent
+	sentByte = input[0];
+	if ((sentByte != PACKET_SENT) && (sentByte != PACKET_UNSENT)) {
+		return false;
+	}
+	// Verify checksum
+	checksum = 0;
+	for (int i = 0; i < input.size(); i++) {
+		checksum = checksum ^ static_cast<unsigned char>(input[i]);
+	}
+	checkbyte = static_cast<unsigned char>(input[input.size() - 1]);
+	if (checkbyte != checksum) {
+		return false;
+	}
+
+	return true;
 }

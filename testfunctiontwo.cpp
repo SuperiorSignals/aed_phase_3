@@ -23,10 +23,12 @@ extern "C" {
 #include "gpio_interface.h"
 }
 
-#define STANDARD_PACKET_TIME 600
-#define STORED_PACKET_TIME 750
+#define CONNECTION_CHECK_TIME 150
 #define EVENT_PACKET_WAIT_TIME 60
 #define MESH_LISTEN_TIME 5.0
+#define STANDARD_PACKET_TIME 600
+#define STORED_PACKET_TIME 750
+
 #define SERVER_ADDRESS "135.26.235.158"
 #define SERVER_PORT "143C"
 #define GPSMODULE_PORT "/dev/ttymxc5"
@@ -35,6 +37,9 @@ extern "C" {
 #define XBEECELL_RATE 115200
 #define XBEEMESH_PORT "/dev/ttymxc2"
 #define XBEEMESH_RATE 115200
+
+#define PACKET_SENT 0x1C
+#define PACKET_UNSENT 0x35
 
 extern Configuration configuration;
 extern PacketStorage packetStorage;
@@ -2094,9 +2099,11 @@ void test_function_46()
 	std::vector<char> packet;
 	std::vector<char> networkMessage;
 	std::vector<char> tx_data;
+	std::vector<char> rx_packet;
 	std::string textMessage;
 	time_t startTime, endTime;
 	time_t currentTime;
+	time_t connCheckTime;
 	bool eventTriggered;
 	bool isCellConnected;
 	bool isGpsValid;
@@ -2120,14 +2127,15 @@ void test_function_46()
 				xBeeCell.dispatchUdpAt(packet);
 			} else {
 				xBeeMesh.unpauseMesh();
+				packet.insert(packet.begin(), PACKET_UNSENT);
 				meshTxPacket.setData(packet);
 				meshTxPacket.setFrameId(0x01);
-				packet = meshTxPacket.getPacket();
+				tx_data = meshTxPacket.getPacket();
 				std::cout << "Mesh tx packet will be sent: ";
-				displayHexadecimal(packet);
+				displayHexadecimal(tx_data);
 				xBeeMesh.apiModeEntry();
 				serialPort.openRts();
-				serialPort.write(packet);
+				serialPort.write(tx_data);
 				inputBuffer.clear();
 				serialPort.timedRead(inputBuffer, 2.0);
 				displayHexadecimal(inputBuffer);
@@ -2151,8 +2159,28 @@ void test_function_46()
 			time(&lastStoredPopTime);
 		}
 		xBeeMesh.unpauseMesh();
-		inputBuffer = xBeeMesh.receiveData(MESH_LISTEN_TIME);
+		rx_packet = xBeeMesh.receiveData(MESH_LISTEN_TIME);
 		xBeeMesh.pauseMesh();
+		if (rx_packet.size() > 0) {
+			if (verifyQueuedPacket(rx_packet)) {
+				packetStorage.pushPacket(rx_packet, QUEUED);
+			}
+		} else {
+			// Transmit stored mesh packets
+			// and transfer
+			rx_packet = packetStorage.popPacket(MESH);
+			if (rx_packet.size() > 0) {
+				if (isCellConnected) {
+					// Transmit message through cell and mark complete
+
+				} else {
+					// Transmit message through mesh
+
+				}
+			} else {
+				packetStorage.transferQueuedPackets();
+			}
+		}
 	}
 }
 

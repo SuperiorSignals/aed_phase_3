@@ -22,7 +22,7 @@
 std::vector<unsigned char> compressImei(std::string input);
 unsigned char generatePacketChecksum(std::vector<unsigned char> input);
 
-enum PacketType { NORMAL, OUT_OF_AREA, INPUT_TRIGGERED, CONFIGURATION_CONFIRM, DEVICE_REPORT, MESH, EVENT };
+enum PacketType { NORMAL, OUT_OF_AREA, INPUT_TRIGGERED, CONFIGURATION_CONFIRM, DEVICE_REPORT, MESH, EVENT, QUEUED };
 
 class DataPacket {
 private:
