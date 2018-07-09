@@ -25,6 +25,8 @@ private:
 	void removeMeshDuplicates();
 	void removeQueuedDuplicates();
 	void consolidateQueuedPackets();
+	void removeExcessPackages(PacketType type);
+	void removeExcess(const char *indexInput, PacketType type);
 	void resetStorage(const char *indexInput, const char *dataInput);
 
 };

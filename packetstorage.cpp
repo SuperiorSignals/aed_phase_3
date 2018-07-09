@@ -6,6 +6,7 @@
 
 #define PACKET_SENT 0x1C
 #define PACKET_UNSENT 0x35
+#define FILE_SIZE_LIMIT 2000000
 
 /*
 int PacketStorage::getPacketCount(PacketType type)
@@ -167,16 +168,21 @@ void PacketStorage::pushPacket(std::vector<char> input, PacketType type)
 	switch (type) {
 	case NORMAL:
 		packetPusher(input, "normalpacketindex.txt", "normalpacketdata.txt");
+		removeExcessPackages(NORMAL);
 		break;
 	case EVENT:
 		packetPusher(input, "eventpacketindex.txt", "eventpacketdata.txt");
+		removeExcessPackages(EVENT);
 		break;
 	case MESH:
 		packetPusher(input, "meshpacketindex.txt", "meshpacketdata.txt");
-		//removeMeshDuplicates();
+		removeMeshDuplicates();
+		removeExcessPackages(MESH);
 		break;
 	case QUEUED:
 		packetPusher(input, "queuedpacketindex.txt", "queuedpacketindex.txt");
+		removeQueuedDuplicates();
+		removeExcessPackages(QUEUED);
 		break;
 	default:
 		break;
@@ -185,17 +191,21 @@ void PacketStorage::pushPacket(std::vector<char> input, PacketType type)
 	switch (type) {
 	case NORMAL:
 		packetPusher(input, "/opt/chainlink/normalpacketindex.txt", "/opt/chainlink/normalpacketdata.txt");
+		removeExcessPackages(NORMAL);
 		break;
 	case EVENT:
 		packetPusher(input, "/opt/chainlink/eventpacketindex.txt", "/opt/chainlink/eventpacketdata.txt");
+		removeExcessPackages(EVENT);
 		break;
 	case MESH:
 		packetPusher(input, "/opt/chainlink/meshpacketindex.txt", "/opt/chainlink/meshpacketdata.txt");
 		removeMeshDuplicates();
+		removeExcessPackages(MESH);
 		break;
 	case QUEUED:
 		packetPusher(input, "/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketdata.txt");
 		removeQueuedDuplicates();
+		removeExcessPackages(QUEUED);
 		break;
 	default:
 		break;
@@ -496,6 +506,44 @@ void PacketStorage::packetPusher(std::vector<char> input, const char *indexInput
 	indexFile.close();
 }
 
+void PacketStorage::removeExcessPackages(PacketType type)
+{
+#ifdef WINDOWS_IMPLEMENTATION
+	switch (type) {
+	case NORMAL:
+		removeExcess("normalpacketindex.txt", NORMAL);
+		break;
+	case EVENT:
+		removeExcess("eventpacketindex.txt", EVENT);
+		break;
+	case MESH:
+		removeExcess("meshpacketindex.txt", MESH);
+		break;
+	case QUEUED:
+		removeExcess("queuedpacketindex.txt", QUEUED);
+		break;
+	default:
+		break;
+	}
+#else
+	switch (type) {
+	case NORMAL:
+		removeExcess("/opt/chainlink/normalpacketindex.txt", NORMAL);
+		break;
+	case EVENT:
+		removeExcess("/opt/chainlink/eventpacketindex.txt", EVENT);
+		break;
+	case MESH:
+		removeExcess("/opt/chainlink/meshpacketindex.txt", MESH);
+		break;
+	case QUEUED:
+		removeExcess("/opt/chainlink/queuedpacketindex.txt", QUEUED);
+	default:
+		break;
+	}
+#endif // WINDOWS_IMPLEMENTATION
+}
+
 void PacketStorage::removeMeshDuplicates()
 {
 #ifdef WINDOWS_IMPLEMENTATION
@@ -714,6 +762,40 @@ void PacketStorage::removeQueuedDuplicates()
 	dataFile.close();
 
 	delete[] dataMemoryAlloc;
+}
+
+void PacketStorage::removeExcess(const char *indexInput, PacketType type)
+{
+	std::ifstream indexFile;
+	unsigned long index;
+	const int SAVE_NUMBER = 1000;
+	std::vector<std::vector<char>> temporary;
+	std::vector<char> discard;
+
+	indexFile.open(indexInput);
+	if (indexFile.is_open()) {
+		indexFile >> index;
+		if (index > FILE_SIZE_LIMIT) {
+			std::cout << "void PacketStorage::removeExcess(const char*, PacketType): ";
+			std::cout << "Removing excess packages.";
+			std::cout << std::endl;
+			for (int i = 0; i < SAVE_NUMBER; i++) {
+				temporary.push_back(popPacket(type));
+			}
+			do {
+				discard = popPacket(type);
+			} while (discard.size() > 0);
+			for (int i = 0; i < temporary.size(); i++) {
+				pushPacket(temporary[i]);
+			}
+		}
+	} else {
+		std::cout << "ERROR [void PacketStorage::removeExcess(const char*, const char*)]: ";
+		std::cout << "Unable to open file " << indexInput;
+		std::cout << std::endl;
+	}
+
+	indexFile.close();
 }
 
 void PacketStorage::resetStorage(const char *indexInput, const char *dataInput)
