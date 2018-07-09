@@ -271,6 +271,23 @@
 //};
 
 /* Pin mux configuration */
+//&iomuxc {
+//	imx6ul-ccimx6ul {
+//		/* Uncomment specific pins of the ADC channels enabled in 'adc-ch-list' */
+//		pinctrl_adc1: adc1grp {
+//			fsl,pins = <
+//		//		/* EXP_GPIO_1 -> GPIO1_5/ADC1_IN5 */
+//		//		MX6UL_PAD_GPIO1_IO05__GPIO1_IO05        0xb0
+//		//		/* EXP_GPIO_2 -> GPIO1_3/ADC1_IN3 */
+//		//		MX6UL_PAD_GPIO1_IO03__GPIO1_IO03        0xb0
+//				/* EXP_GPIO_3 -> GPIO1_2/ADC1_IN2 */
+//				MX6UL_PAD_GPIO1_IO02__GPIO1_IO02        0xb0
+//			>;
+//		};
+//	};
+//};
+
+/* Pin mux configuration */
 &iomuxc {
 	imx6ul-ccimx6ul {
 		/* Uncomment specific pins of the ADC channels enabled in 'adc-ch-list' */
@@ -280,8 +297,11 @@
 		//		MX6UL_PAD_GPIO1_IO05__GPIO1_IO05        0xb0
 		//		/* EXP_GPIO_2 -> GPIO1_3/ADC1_IN3 */
 		//		MX6UL_PAD_GPIO1_IO03__GPIO1_IO03        0xb0
-				/* EXP_GPIO_3 -> GPIO1_2/ADC1_IN2 */
-				MX6UL_PAD_GPIO1_IO02__GPIO1_IO02        0xb0
+		//		/* EXP_GPIO_3 -> GPIO1_2/ADC1_IN2 */
+		//		MX6UL_PAD_GPIO1_IO02__GPIO1_IO02        0xb0
+				MX6UL_PAD_GPIO1_IO00__GPIO1_IO00	0xb0
+				MX6UL_PAD_GPIO1_IO01__GPIO1_IO01	0xb0
+				MX6UL_PAD_GPIO1_IO04__GPIO1_IO04	0xb0	
 			>;
 		};
 	};
