@@ -1,0 +1,6 @@
+#ifndef DEBUGINFO_H
+#define DEBUGINFO_H
+
+//#define WINDOWS_IMPLEMENTATION
+
+#endif // DEBUGINFO_H
