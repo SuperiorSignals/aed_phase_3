@@ -1973,6 +1973,7 @@ void test_function_44()
 		//xBeeMesh.pauseMesh();
 	}
 }
+
 void test_function_45()
 {
 	//Configuration configuration;
@@ -2286,8 +2287,12 @@ void test_function_48()
 		if (difftime(currentTime, connectCheckTime) > CONNECTION_CHECK_TIME) {
 			if (xBeeCell.getConnection() == 0) {
 				isCellConnected = true;
+				std::cout << "isCellConnected = true";
+				std::cout << std::endl;
 			} else {
 				isCellConnected = false;
+				std::cout << "isCellConnected = false";
+				std::cout << std::endl;
 			}
 			time(&connectCheckTime);
 		}
@@ -2380,7 +2385,16 @@ void test_function_48()
 	}
 }
 
-void test_function_49() { }
+void test_function_49()
+{
+	XBeeCell xBeeCell;
+	XBeeMesh xBeeMesh;
+
+	// If cell is 9600 baud, set to 115200 baud
+
+	// If mesh is 115200 baud, set to 9600 baud
+
+}
 void test_function_50() { }
 void test_function_51() { }
 void test_function_52() { }

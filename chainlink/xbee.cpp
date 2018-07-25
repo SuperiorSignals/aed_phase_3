@@ -28,6 +28,11 @@ XBee::XBee()
 	//setBaudRate(BAUD_RATE_115200);
 }
 
+void XBee::closePort()
+{
+	serialPort.close();
+}
+
 /*
 void XBee::setBaudRate(BaudRate input)
 {

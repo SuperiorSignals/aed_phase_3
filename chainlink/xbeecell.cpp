@@ -284,17 +284,74 @@ void XBeeCell::translateMessage(std::string message)
 }
 */
 
+void XBeeCell::setBaudRate()
+{
+	openPort("/dev/ttymxc1", 9600);
+	enterCommandMode();
+	writeCommand("ATBD 7\r");	// Set baud rate to 115200
+	writeCommand("ATWR\r");		// Write changes
+	writeCommand("ATBD 7\r");	// Set baud rate to 115200
+	writeCommand("ATAC\r");		// Apply changes
+	exitCommandMode();
+	closePort();
+	openPort("/dev/ttymxc1", 115200);
+}
+
 void XBeeCell::parseMessage(std::string message)
 {
 	std::string output;
 	InstructionType messageType;
 	std::string temporary;
+	std::size_t position;
 	
+	std::cout << "In void XBeeCell::parseMessage(std::string)";
+	std::cout << std::endl;
+	std::cout << "Will parse the following message: ";
+	displayHexadecimal(stringToVector(message));
+	if (message.size() > 9)	{ // Remove a trailing "OK"
+		if (message[0] == 'O' && message[1] == 'K') {
+				message.erase(message.begin());
+				message.erase(message.begin());
+				std::cout << "Remaining message: ";
+				displayHexadecimal(stringToVector(message));
+		}
+	}
 	if (message.size() > 7) { // Is this a proper minimum length?
-		if (message.at(0) == '@' && message.at(message.size() - 1) == '$') { // Check string formatting
+
+		std::cout << "message.at(0) == " << message.at(0);
+		std::cout << std::endl;
+		std::cout << "message.at(message.size() - 1) == " << message.at(message.size() - 1);
+		std::cout << std::endl;
+		message.find_first_of('$', position);
+		if (message.at(0) == '@' && position != std::string::npos) { // Check string formatting
 			temporary = message.substr(1, INSTRUCTION_LENGTH);
+			std::cout << "temporary: " << temporary;
+			std::cout << std::endl;
 			if (temporary.compare("CONN:") == 0) {
-				connection = std::stoi(temporary.substr(5, temporary.size() - 7));
+				std::cout << "position - 6" << position - 6;
+				std::cout << std::endl;
+				std::cout << "connection: ";
+				displayHexadecimal(stringToVector(message.substr(6, position - 6)));
+				try {
+					connection = std::stoi(message.substr(6, position - 6));
+				} catch(std::invalid_argument &e) {
+					std::cout << "ERROR [void XBeeCell::parseMessage(std::string message)]: ";
+					std::cout << "invalid_argument exception generated.";
+					std::cout << std::endl;
+					return;
+				} catch(std::out_of_range &e) {
+					std::cout << "ERROR [void XBeeCell::parseMessage(std::string message)]: ";
+					std::cout << "out_of_range exception generated.";
+					std::cout << std::endl;
+					return;
+				} catch(...) {
+					std::cout << "ERROR [void XBeeCell::parseMessage(std::string message)]: ";
+					std::cout << "exception generated.";
+					std::cout << std::endl;
+					return;
+				}
+				std::cout << "Connection set to: " << connection;
+				std::cout << std::endl;
 			} else if (temporary.compare("CONF:") == 0) {
 				configuration.parseConfiguration(temporary.substr(5, temporary.size() - 7));
 			} else if (temporary.compare("EROR:") == 0) {

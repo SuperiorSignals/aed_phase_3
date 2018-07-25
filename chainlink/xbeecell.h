@@ -29,6 +29,7 @@ public:
 	int getConnection();
 	std::string getImei();
 	std::string getText();
+	void setBaudRate();
 
 private:
 	void parseMessage(std::string message);

@@ -194,6 +194,19 @@ void XBeeMesh::sendDataTranslation(std::vector<char> input)
 	sendData(s);
 }
 
+void XBeeMesh::setBaudRate()
+{
+	openPort("/dev/ttymxc2", 115200);
+	enterCommandMode();
+	writeCommand("ATBD 3\r");	// Set baud rate to 9600
+	writeCommand("ATWR\r");		// Write changes
+	writeCommand("ATBD 3\r");	// Set baud rate to 9600
+	writeCommand("ATAC\r");		// Apply changes
+	exitCommandMode();
+	closePort();
+	openPort("/dev/ttymxc2", 9600);
+}
+
 void XBeeMesh::setDestinationHigh(std::string input)
 {
 	enterCommandMode();

@@ -30,6 +30,7 @@ enum OperationMode {
 class XBee {
 public:
 	XBee();
+	void closePort();
 	int getBaudRate();
 	unsigned int getGuardTime();
 	OperationMode getOperationMode();

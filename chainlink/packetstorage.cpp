@@ -78,6 +78,7 @@ int PacketStorage::getPacketCount(PacketType type)
 }
 */
 
+/*
 void PacketStorage::consolidateQueuedPackets()
 {
 	std::vector<std::vector<char>> packets;
@@ -86,6 +87,7 @@ void PacketStorage::consolidateQueuedPackets()
 	char compSentStatus;
 	char tempSentStatus;
 	bool compUnsentTempSent;
+	//int numberOfPackets;
 
 	do {
 		temporary = popPacket(QUEUED);
@@ -94,6 +96,7 @@ void PacketStorage::consolidateQueuedPackets()
 		}
 	} while (temporary.size() > 0);
 
+	//numberOfPackets = packets.size();
 	for (int i = 0; i < packets.size(); i++) {
 		compUnsentTempSent = false;
 		comparator = packets[i];
@@ -116,6 +119,57 @@ void PacketStorage::consolidateQueuedPackets()
 		if (compUnsentTempSent) {
 			packets.erase(packets.begin() + i);
 		}
+	}
+}
+*/
+
+void PacketStorage::consolidateQueuedPackets()
+{
+	std::vector<std::vector<char>> packets;
+	std::vector<char> comparator;
+	std::vector<char> temporary;
+	char comparatorSentStatus;
+	char temporarySentStatus;
+	bool removeTemporary;
+	bool removeComparator;
+
+	do {
+		temporary = popPacket(QUEUED);
+		if (temporary.size() > 0) {
+			packets.push_back(temporary);
+		}
+	} while (temporary.size() > 0);
+
+	for (int i = 0; i < packets.size(); i++) {
+		removeComparator = false;
+		comparator = packets[i];
+		comparatorSentStatus = comparator[0];
+		comparator.erase(comparator.begin());
+		for (int j = i + 1; j < packets.size(); j++) {
+			removeTemporary = false;
+			temporary = packets[j];
+			temporarySentStatus = temporary[0];
+			temporary.erase(temporary.begin());
+			if (comparePacket(comparator, temporary)) {
+				if (temporarySentStatus == PACKET_UNSENT) {
+					removeTemporary = true;
+				} else if (comparatorSentStatus == PACKET_UNSENT) {
+					removeComparator = true;
+				}
+			}
+			if (removeTemporary) {
+				packets.erase(packets.begin() + j);
+				--j;
+			}
+		}
+		if (removeComparator) {
+			packets.erase(packets.begin() + i);
+			--i;
+		}
+	}
+	for (int i = 0; i < packets.size(); i++) {
+		temporary = packets[i];
+		pushPacket(temporary, QUEUED);
 	}
 }
 
@@ -180,7 +234,7 @@ void PacketStorage::pushPacket(std::vector<char> input, PacketType type)
 		removeExcessPackages(MESH);
 		break;
 	case QUEUED:
-		packetPusher(input, "queuedpacketindex.txt", "queuedpacketindex.txt");
+		packetPusher(input, "queuedpacketindex.txt", "queuedpacketdata.txt");
 		removeQueuedDuplicates();
 		removeExcessPackages(QUEUED);
 		break;
@@ -267,7 +321,7 @@ void PacketStorage::resetPacketStorage(PacketType type)
 		resetStorage("meshpacketindex.txt", "meshpacketdata.txt");
 		break;
 	case QUEUED:
-		resetStorage("queuedpacketindex.txt", "queuedpacketindex.txt");
+		resetStorage("queuedpacketindex.txt", "queuedpacketdata.txt");
 		break;
 	default:
 		break;
@@ -284,7 +338,7 @@ void PacketStorage::resetPacketStorage(PacketType type)
 		resetStorage("/opt/chainlink/meshpacketindex.txt", "/opt/chainlink/meshpacketdata.txt");
 		break;
 	case QUEUED:
-		resetStorage("/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketindex.txt");
+		resetStorage("/opt/chainlink/queuedpacketindex.txt", "/opt/chainlink/queuedpacketdata.txt");
 	default:
 		break;
 	}
@@ -786,7 +840,7 @@ void PacketStorage::removeExcess(const char *indexInput, PacketType type)
 				discard = popPacket(type);
 			} while (discard.size() > 0);
 			for (int i = 0; i < temporary.size(); i++) {
-				pushPacket(temporary[i]);
+				pushPacket(temporary[i], type);
 			}
 		}
 	} else {
